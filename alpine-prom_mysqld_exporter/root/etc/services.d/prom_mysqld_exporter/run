@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec /bin/mysqld_exporter
