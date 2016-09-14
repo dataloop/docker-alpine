@@ -1,0 +1,3 @@
+[submodule "alpine-dataloop-agent/agent"]
+	path = alpine-dataloop-agent/agent
+	url = git@github.com:dataloop/agent.git
