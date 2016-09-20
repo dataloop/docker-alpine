@@ -1,4 +1,4 @@
-DATALOOP/AGENT
+DATALOOP/AGENT-BASE
 ==============
 
 This container is provided as a base container running a minimal dataloop-agent.
@@ -16,7 +16,7 @@ In it's simplest form, you need only pass the API Key for your Dataloop account 
 ```
 docker run -d \
   -e "DATALOOP_AGENT_KEY=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" \
-  dataloop/agent:latest
+  dataloop/agent-base:latest
 ```
 
 ENVIRONMENT VARIABLES
