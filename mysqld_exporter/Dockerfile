@@ -1,4 +1,4 @@
-FROM dataloop/alpine-dataloop-agent:latest
+FROM dataloop/agent-base:latest
 MAINTAINER Tom Ashley <tom@dataloop.io>
 
 
@@ -8,4 +8,4 @@ RUN mv mysqld_exporter-0.8.1.linux-amd64/mysqld_exporter /bin
 
 ADD root /
 
-EXPOSE      9104
+EXPOSE 9104
