@@ -17,3 +17,6 @@ RUN pip install -r /dataloop-agent/requirements.txt && mkdir -p /etc/dataloop /v
 
 # cleanup
 RUN apk del python-dev gcc linux-headers
+
+# expose the fingerprint
+EXPOSE 8000
