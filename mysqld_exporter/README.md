@@ -31,6 +31,24 @@ ENVIRONMENT VARIABLES
 See https://github.com/dataloop/docker-alpine/agent/base for extra options to be passed for the Dataloop agent.
 
 
+DATALOOP PLUGIN
+===============
+
+This container will require a plugin in Dataloop to make it useful
+
+This is sufficiently basic to copy into a plugin and apply to this container directly, or via a tag.
+
+The plugin type *must* be set to `prometheus`
+
+```
+#!/usr/bin/env python
+
+import requests
+
+print requests.get('http://localhost:9104/metrics').text
+```
+
+
 EXTRA INFORMATION
 =================
 
