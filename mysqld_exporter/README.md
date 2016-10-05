@@ -11,9 +11,12 @@ USAGE
 
 In it's simplest form, you must pass this container a `DATALOOP_AGENT_KEY` for the Dataloop agent and a `DATA_SOURCE_NAME` for the mysqld_exporter to connect to a database instance.
 
+Pass any other options for the mysqld_exporter in a string to the `EXPORTER_OPTIONS` environment variable.
+
 ```
 docker run -d \
   -e "DATA_SOURCE_NAME=remote:pass@(10.0.0.2:3306)/mysql" \
+  -e "EXPORTER_OPTION=" \
   -p 8000:8000 \
   -e "DATALOOP_AGENT_KEY=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" \
   -p 9104:9104 \
