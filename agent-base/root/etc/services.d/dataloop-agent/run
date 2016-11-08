@@ -24,6 +24,9 @@ sed -e 's/<<APIKEY>>/'"${DATALOOP_AGENT_KEY}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop server"
 # use ~ to delimit this sed, as replacement contains http:// slashes
 sed -e 's~<<SERVER>>~'"${DATALOOP_SERVER}"'~' -i /etc/dataloop/agent.yaml
+echo "sedding dataloop agent protocol"
+sed -e 's~http://~ws://~' -i /etc/dataloop/agent.yaml
+sed -e 's~https://~wss://~' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop name"
 sed -e 's/<<NAME>>/'"${DATALOOP_NAME}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop tags"
