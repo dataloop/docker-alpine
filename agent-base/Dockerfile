@@ -2,7 +2,7 @@ FROM smebberson/alpine-base:2.0.0
 MAINTAINER Tom Ashley <tom@dataloop.io>
 
 # Install dataloop basic requirements
-RUN apk add --no-cache --update bash curl python python-dev py-pip gcc musl-dev linux-headers
+RUN apk add --no-cache --update bash curl python python-dev py-pip gcc musl-dev linux-headers s6
 
 ADD agent/ /opt/dataloop/agent
 
@@ -18,7 +18,7 @@ RUN find /opt/dataloop/agent/dataloop_agent -path /opt/dataloop/agent/dataloop_a
 
 
 # cleanup
-RUN apk del python-dev gcc linux-headers
+RUN apk del python-dev gcc linux-headers binutils binutils-libs libstdc++ gmp isl
 
 # expose the fingerprint
 EXPOSE 8000
