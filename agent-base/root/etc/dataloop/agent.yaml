@@ -9,7 +9,7 @@ debug: no
 ## The dataloop api key
 api-key: <<APIKEY>>
 
-server: wss://<<SERVER>>
+server: <<SERVER>>
 
 ##  set tags to a comma separated list of tags applied to this agent
 tags: <<TAGS>>

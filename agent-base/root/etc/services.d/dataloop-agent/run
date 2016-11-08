@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv sh
 
 if [ ! ${DATALOOP_SERVER} ] ; then
-  DATALOOP_SERVER="agent.dataloop.io"
+  DATALOOP_SERVER="wss://agent.dataloop.io"
 fi
 
 if [ ! ${DATALOOP_NAME} ] ; then
@@ -22,7 +22,8 @@ fi
 echo "sedding dataloop apikey"
 sed -e 's/<<APIKEY>>/'"${DATALOOP_AGENT_KEY}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop server"
-sed -e 's/<<SERVER>>/'"${DATALOOP_SERVER}"'/' -i /etc/dataloop/agent.yaml
+# use ~ to delimit this sed, as replacement contains http:// slashes
+sed -e 's~<<SERVER>>~'"${DATALOOP_SERVER}"'~' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop name"
 sed -e 's/<<NAME>>/'"${DATALOOP_NAME}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop tags"
