@@ -1,0 +1,4 @@
+---
+shell: /usr/bin/python
+interval: 30
+format: prometheus
