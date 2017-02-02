@@ -109,11 +109,6 @@ def get_container_real_host_name():
         return ""
 
 
-# def get_host_data(ctx):
-#     cadvisor_url = ctx['cadvisor_host'] + "/api/v1.3/machine"
-#     return requests.get(cadvisor_url).json()
-
-
 """
 DATALOOP API UTILS
 """
