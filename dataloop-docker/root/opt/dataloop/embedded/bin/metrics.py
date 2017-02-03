@@ -36,7 +36,7 @@ def get_container_metrics(container):
     metrics = {}
 
     metrics.update(dl_stats.get_base_stats(finger, stats))
-    #metrics.update(dl_stats.get_network_stats(finger, stats))
+    metrics.update(dl_stats.get_network_stats(finger, stats))
     #metrics.update(dl_stats.get_cpu_stats(finger, stats))
     #metrics.update(dl_stats.get_memory_stats(finger, stats))
     #metrics.update(dl_stats.get_diskio_stats(finger, stats))

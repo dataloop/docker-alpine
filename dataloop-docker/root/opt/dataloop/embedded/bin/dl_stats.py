@@ -1,35 +1,32 @@
 
-# commented metric path are the one that we can't get with basic docker stats api
-
 def get_base_stats(finger, stats):
     num_cores = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
+    base_prefix = finger + '.base'
 
     base_stats = {
-        finger + '.base.count': 1,
-        #finger + '.base.load_1_min': last['cpu']['load_average'],
-        #finger + '.base.load_fractional': load_fractional(stats, host),
-        finger + '.base.cpu': cpu_percent(stats, num_cores),
-        finger + '.base.memory': memory_percent(stats),
-        finger + '.base.swap': swap_percent(stats),
-        #finger + '.base.net_upload': network_tx_kps(stats),
-        #finger + '.base.net_download': network_rx_kps(stats)
+        base_prefix + '.count': 1,
+        #base_prefix + '.load_1_min': last['cpu']['load_average'],
+        #base_prefix + '.load_fractional': load_fractional(stats, host),
+        base_prefix + '.cpu': get_cpu_percent(stats, num_cores),
+        base_prefix + '.memory': get_memory_percent(stats),
+        base_prefix + '.swap': get_swap_percent(stats),
+        #base_prefix + '.net_upload': network_tx_kps(stats),
+        #base_prefix + '.net_download': network_rx_kps(stats)
     }
 
     return base_stats
 
 
-"""
 def get_network_stats(finger, stats):
+    network_path = finger + '.base.network'
 
+    def reduce_docker_interface(network_stats, docker_interface):
+        interface_name, interface_stats = docker_interface
+        interface_path = network_path + '.' + interface_name
 
-def get_cpu_stats(finger, stats):
+        return add_interface_stats(network_path, interface_path, interface_stats.items(), network_stats)
 
-
-def get_memory_stats(finger, stats):
-
-
-def get_diskio_stats(finger, stats):
-"""
+    return reduce(reduce_docker_interface, stats['networks'].items(), {})
 
 
 """
@@ -37,7 +34,7 @@ BASE METRICS UTILS
 """
 
 
-def cpu_percent(stats, num_cores):
+def get_cpu_percent(stats, num_cores):
     cpu_percent = 0.0
     num_cores = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
 
@@ -59,14 +56,14 @@ def cpu_percent(stats, num_cores):
     return cpu_percent
 
 
-def memory_percent(stats):
+def get_memory_percent(stats):
     memory_usage = stats['memory_stats']['usage']
     memory_limit = stats['memory_stats']['limit']
 
     return float(memory_usage) / float(memory_limit) * 100.0
 
 
-def swap_percent(stats):
+def get_swap_percent(stats):
     swap_percent = 0.0
 
     swap_usage = stats['memory_stats']['stats']['swap']
@@ -78,23 +75,39 @@ def swap_percent(stats):
     return swap_percent
 
 
-""" These are old methods that was used when we had cadvisor
-
-def load_fractional(stats, host):
-    return float(stats[-1]['cpu']['load_average']) / float(host['num_cores'])
-
-
-def network_tx_kps(stats):
-    n_prev_stats = min(10, len(stats))
-    network_tx_now = stats[-1]['network']['tx_bytes']
-    network_tx_prev = stats[-n_prev_stats]['network']['tx_bytes']
-
-    return ((network_tx_now - network_tx_prev) / 1024) / n_prev_stats
-
-
-def network_rx_kps(stats):
-    n_prev_stats = min(10, len(stats))
-    network_rx_now = stats[-1]['network']['rx_bytes']
-    network_rx_prev = stats[-n_prev_stats]['network']['rx_bytes']
-    return ((network_rx_now - network_rx_prev) / 1024) / n_prev_stats
 """
+NETWORK METRICS UTILS
+"""
+
+
+# a dictionary mapping docker stats metrics to our own base metrics
+docker_to_base_network_metrics = {
+    'rx_bytes':     'bytes_recv',
+    'rx_dropped':   'dropout',
+    'rx_errors':    'errout',
+    'rx_packets':   'packets_recv',
+    'tx_bytes':     'bytes_sent',
+    'tx_dropped':   'dropin',
+    'tx_errors':    'errin',
+    'tx_packets':   'packets_sent'
+}
+
+
+# add all the interface level metrics (ie: finger.networks.eth0.bytes_recv, etc.)
+# as well as incremeting the top level metrics (ie: finger.networks.bytes_recv, etc.)
+def add_interface_stats(network_path, interface_path, interface_stats, network_stats):
+
+    def reduce_interface_stats(network_stats, interface_stat):
+        key, value = interface_stat
+
+        metric_name = docker_to_base_network_metrics[key]
+
+        network_metric_path = network_path + '.' + metric_name
+        network_stats[network_metric_path] = network_stats.get(network_metric_path, 0) + value
+
+        interface_metric_path = interface_path + '.' + metric_name
+        network_stats[interface_metric_path] = value
+
+        return network_stats
+
+    return reduce(reduce_interface_stats, interface_stats, network_stats)
