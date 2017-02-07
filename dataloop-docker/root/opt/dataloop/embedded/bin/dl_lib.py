@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s - %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
                     stream=sys.stdout,
-                    level=logging.INFO)
+                    level=logging.WARN)
 
 # connect to the docker server
 if os.path.exists('/rootfs/var/run/docker.sock'):
