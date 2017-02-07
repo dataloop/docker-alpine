@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec /usr/bin/python /opt/dataloop/agent/agent.py --config /etc/dataloop/agent.yaml agent deregister
