@@ -11,6 +11,7 @@ def get_metrics(finger, stats):
     metrics.update(get_network_metrics(finger, stats['networks']))
     metrics.update(get_cpu_metrics(finger, stats['cpu_stats']))
     metrics.update(get_memory_metrics(finger, stats['memory_stats']))
+    metrics.update(get_diskio_metrics(finger, stats['blkio_stats']))
 
     return metrics
 
@@ -125,3 +126,29 @@ def get_memory_metrics(finger, memory_stats):
     memory_metrics.update(memory_stats_metrics)
 
     return memory_metrics
+
+
+
+"""
+diskio metrics
+"""
+
+def get_diskio_metrics(finger, diskio_stats):
+    diskio_path = finger + '.diskio'
+    diskio_metrics = {}
+
+    io_serviced_path = diskio_path + '.io_serviced.0.stats'
+    io_serviced_stats = diskio_stats['io_serviced_recursive']
+
+    for key, value in enumerate(io_serviced_stats):
+        path = io_serviced_path + '.' + value['op']
+        diskio_metrics[path] = value['value']
+
+    io_service_bytes_path = diskio_path + 'io_service_bytes.0.stats'
+    io_service_bytes_stats = diskio_stats['io_service_bytes_recursive']
+
+    for key, value in enumerate(io_service_bytes_stats):
+        path = io_service_bytes_path + '.' + value['op']
+        diskio_metrics[path] = value['value']
+
+    return diskio_metrics
