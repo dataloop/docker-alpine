@@ -73,7 +73,7 @@ def get_base_cpu_percent(stats):
     if system_delta > 0 and cpu_delta > 0:
         cpu_percent = float(cpu_delta) / float(system_delta) * num_cores * 100
 
-    return "%d%%" % cpu_percent
+    return cpu_percent
 
 
 
@@ -89,8 +89,7 @@ def get_memory_percent(memory_stats):
     if memory_usage is None or memory_limit is None:
         return None
 
-    memory_percent = float(memory_usage) / float(memory_limit) * 100
-    return "%d%%" % memory_percent
+    return float(memory_usage) / float(memory_limit) * 100
 
 
 def get_swap_percent(memory_stats):
@@ -106,7 +105,7 @@ def get_swap_percent(memory_stats):
     if swap_usage > 0 and swap_total > 0:
         swap_percent = float(swap_usage) / float(swap_total) * 100.0
 
-    return "%d%%" % swap_percent
+    return swap_percent
 
 
 
@@ -123,8 +122,8 @@ def get_base_network_metrics(base_path, prev_stats, stats):
     net_download = (network_stats['rx_bytes'] - prev_network_stats['rx_bytes']) / 1024 / RATE_INTERVAL
 
     network_metrics = {
-        base_path + '.net_upload': str(net_upload) + 'Kps',
-        base_path + '.net_download': str(net_download) + 'Kps',
+        base_path + '.net_upload': net_upload,
+        base_path + '.net_download': net_download,
     }
 
     return network_metrics
