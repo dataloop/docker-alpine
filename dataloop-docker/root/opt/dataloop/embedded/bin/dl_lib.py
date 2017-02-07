@@ -7,6 +7,7 @@ import requests
 import re
 import unicodedata
 import socket
+from docker.client import DockerClient
 
 os.environ['NO_PROXY'] = '127.0.0.1'
 UUID_HASH = uuid.UUID('12345678123456781234567812345678')
@@ -20,7 +21,7 @@ logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s - %(message)s",
 
 # connect to the docker server
 if os.path.exists('/rootfs/var/run/docker.sock'):
-    docker_cli = Client(base_url='unix://rootfs/var/run/docker.sock', version='auto')
+    docker_cli = DockerClient(base_url='unix://rootfs/var/run/docker.sock', version='auto')
 else:
     docker_cli = docker.from_env(assert_hostname=False)
 
