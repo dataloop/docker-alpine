@@ -1,41 +1,61 @@
+import time
+import dl_stats_old
 
-def get_base_stats(finger, stats):
-    num_cores = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
-    base_prefix = finger + '.base'
 
+RATE_INTERVAL = 5
+
+
+def get_metrics(containers):
+    metrics = {}
+
+    for c in containers: c.prev_stats = c.stats(stream=False)
+    time.sleep(RATE_INTERVAL)
+    for c in containers: c.now_stats = c.stats(stream=False)
+
+    for container in containers:
+        container_metrics = get_container_metrics(container)
+        metrics.update(container_metrics)
+
+    return metrics
+
+
+def get_container_metrics(container):
+    base_metrics = {}
+
+    finger = container.finger
+    prev_stats = container.prev_stats
+    now_stats  = container.now_stats
+
+    base_metrics.update(get_base_metrics(finger, prev_stats, now_stats))
+    # legacy, cadvisor type metrics
+    base_metrics.update(dl_stats_old.get_metrics(finger, now_stats))
+
+    return base_metrics
+
+
+def get_base_metrics(finger, prev_stats, stats):
+    base_path = finger + '.base'
+
+    # missing: load_1_min and load_fractional
     base_stats = {
-        base_prefix + '.count': 1,
-        #base_prefix + '.load_1_min': last['cpu']['load_average'],
-        #base_prefix + '.load_fractional': load_fractional(stats, host),
-        base_prefix + '.cpu': get_cpu_percent(stats, num_cores),
-        base_prefix + '.memory': get_memory_percent(stats),
-        base_prefix + '.swap': get_swap_percent(stats),
-        #base_prefix + '.net_upload': network_tx_kps(stats),
-        #base_prefix + '.net_download': network_rx_kps(stats)
+        base_path + '.count': 1,
+        base_path + '.cpu': get_base_cpu_percent(stats),
+        base_path + '.memory': get_memory_percent(stats['memory_stats']),
+        base_path + '.swap': get_swap_percent(stats['memory_stats']),
     }
+
+    base_stats.update(get_base_network_metrics(base_path, prev_stats['networks'], stats['networks']))
 
     return base_stats
 
 
-def get_network_stats(finger, stats):
-    network_path = finger + '.base.network'
-
-    def reduce_docker_interface(network_stats, docker_interface):
-        interface_name, interface_stats = docker_interface
-        interface_path = network_path + '.' + interface_name
-
-        return add_interface_stats(network_path, interface_path, interface_stats.items(), network_stats)
-
-    return reduce(reduce_docker_interface, stats['networks'].items(), {})
-
 
 """
-BASE METRICS UTILS
+base cpu metrics
 """
 
-
-def get_cpu_percent(stats, num_cores):
-    cpu_percent = 0.0
+def get_base_cpu_percent(stats):
+    cpu_percent = 0
     num_cores = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
 
     cpu_usage = stats['cpu_stats']['cpu_usage']['total_usage']
@@ -45,69 +65,76 @@ def get_cpu_percent(stats, num_cores):
     prev_system_usage = stats['precpu_stats']['system_cpu_usage']
 
     # calculate the change for the cpu usage of the container in between readings
-    cpu_delta = float(cpu_usage) - float(prev_cpu_usage)
+    cpu_delta = cpu_usage - prev_cpu_usage
 
     # calculate the change for the entire system between readings
-    system_delta = float(system_usage) - float(prev_system_usage)
+    system_delta = system_usage - prev_system_usage
 
-    if system_delta > 0.0 and cpu_delta > 0.0:
-        cpu_percent = (cpu_delta / system_delta) * float(num_cores) * 100.0
+    if system_delta > 0 and cpu_delta > 0:
+        cpu_percent = float(cpu_delta) / float(system_delta) * num_cores * 100
 
-    return cpu_percent
-
-
-def get_memory_percent(stats):
-    memory_usage = stats['memory_stats']['usage']
-    memory_limit = stats['memory_stats']['limit']
-
-    return float(memory_usage) / float(memory_limit) * 100.0
+    return "%d%%" % cpu_percent
 
 
-def get_swap_percent(stats):
-    swap_percent = 0.0
 
-    swap_usage = stats['memory_stats']['stats']['swap']
-    swap_total = stats['memory_stats']['stats']['total_swap']
+"""
+base memory metrics
+"""
+
+
+def get_memory_percent(memory_stats):
+    memory_usage = memory_stats.get('usage', None)
+    memory_limit = memory_stats.get('limit', None)
+
+    if memory_usage is None or memory_limit is None:
+        return None
+
+    memory_percent = float(memory_usage) / float(memory_limit) * 100
+    return "%d%%" % memory_percent
+
+
+def get_swap_percent(memory_stats):
+    swap_percent = 0
+    stats = memory_stats.get('stats', {})
+
+    swap_usage = stats.get('swap', None)
+    swap_total = stats.get('total_swap', None)
+
+    if swap_usage is None or swap_total is None:
+        return None
 
     if swap_usage > 0 and swap_total > 0:
         swap_percent = float(swap_usage) / float(swap_total) * 100.0
 
-    return swap_percent
+    return "%d%%" % swap_percent
+
 
 
 """
-NETWORK METRICS UTILS
+base network metrics
 """
 
 
-# a dictionary mapping docker stats metrics to our own base metrics
-docker_to_base_network_metrics = {
-    'rx_bytes':     'bytes_recv',
-    'rx_dropped':   'dropout',
-    'rx_errors':    'errout',
-    'rx_packets':   'packets_recv',
-    'tx_bytes':     'bytes_sent',
-    'tx_dropped':   'dropin',
-    'tx_errors':    'errin',
-    'tx_packets':   'packets_sent'
-}
+def get_base_network_metrics(base_path, prev_stats, stats):
+    prev_network_stats = calculate_base_network_stats(prev_stats)
+    network_stats = calculate_base_network_stats(stats)
+
+    net_upload = (network_stats['tx_bytes'] - prev_network_stats['tx_bytes']) / 1024 / RATE_INTERVAL
+    net_download = (network_stats['rx_bytes'] - prev_network_stats['rx_bytes']) / 1024 / RATE_INTERVAL
+
+    network_metrics = {
+        base_path + '.net_upload': str(net_upload) + 'Kps',
+        base_path + '.net_download': str(net_download) + 'Kps',
+    }
+
+    return network_metrics
 
 
-# add all the interface level metrics (ie: finger.networks.eth0.bytes_recv, etc.)
-# as well as incremeting the top level metrics (ie: finger.networks.bytes_recv, etc.)
-def add_interface_stats(network_path, interface_path, interface_stats, network_stats):
+def calculate_base_network_stats(network_stats):
+    base_network_stats = {'rx_bytes': 0, 'tx_bytes': 0}
 
-    def reduce_interface_stats(network_stats, interface_stat):
-        key, value = interface_stat
+    for key, value in network_stats.items():
+        base_network_stats['rx_bytes'] +=  value['rx_bytes']
+        base_network_stats['tx_bytes'] +=  value['tx_bytes']
 
-        metric_name = docker_to_base_network_metrics[key]
-
-        network_metric_path = network_path + '.' + metric_name
-        network_stats[network_metric_path] = network_stats.get(network_metric_path, 0) + value
-
-        interface_metric_path = interface_path + '.' + metric_name
-        network_stats[interface_metric_path] = value
-
-        return network_stats
-
-    return reduce(reduce_interface_stats, interface_stats, network_stats)
+    return base_network_stats
