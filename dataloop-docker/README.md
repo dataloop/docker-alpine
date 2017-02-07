@@ -1,7 +1,7 @@
 Dataloop Docker Autodiscovery Container
 =======================================
 
-This container contains a Dataloop agent, CAdvisor and some magic scripts that create virtual agents in Dataloop for each
+This container contains a Dataloop agent and some magic scripts that create virtual agents in Dataloop for each
 running container. Depending on which OS you are running on your Docker hosts you may need to add different run options.
 
 This container builds on [dataloop/agent-base](https://github.com/dataloop/docker-alpine/tree/master/agent-base) where further options to pass to the container can be found.
@@ -88,7 +88,7 @@ All state is stored in Dataloop so these scripts can be run in ephemeral contain
 
 - discover.py
 
-Polls CAdvisor API and Dataloop. Ensures containers match agents via register and deregister API's.
+Polls Docker api and Dataloop. Ensures containers match agents via register and deregister API's.
 
 - tag.py
 
@@ -96,4 +96,4 @@ Tags agents in Dataloop with their Docker Tags by matching container ID to agent
 
 - metrics.py
 
-Sends CAdvisor metrics to Dataloop via the Graphite endpoint every 10 seconds by matching container ID to agent name.
+Sends docker metrics to Dataloop via the Graphite endpoint every 30 seconds by matching container ID to agent name.
