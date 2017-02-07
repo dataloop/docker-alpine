@@ -14,34 +14,11 @@ def send_metrics(ctx):
 
     try:
         containers = dl_lib.get_containers()
-        metrics = get_metrics(containers)
+        for c in containers: c.finger = dl_lib.get_container_hash(c)
+        metrics = dl_stats.get_metrics(containers)
         publish_metrics(ctx, metrics)
     except Exception as ex:
         logger.error("metrics failed: %s" % ex, exc_info=True)
-
-
-def get_metrics(containers):
-    metrics = {}
-    for container in containers:
-        container_metrics = get_container_metrics(container)
-        metrics.update(container_metrics)
-
-    return metrics
-
-
-def get_container_metrics(container):
-    finger = dl_lib.get_container_hash(container)
-    stats = container.stats(stream=False)
-
-    metrics = {}
-
-    metrics.update(dl_stats.get_base_stats(finger, stats))
-    metrics.update(dl_stats.get_network_stats(finger, stats))
-    #metrics.update(dl_stats.get_cpu_stats(finger, stats))
-    #metrics.update(dl_stats.get_memory_stats(finger, stats))
-    #metrics.update(dl_stats.get_diskio_stats(finger, stats))
-
-    return metrics
 
 
 def publish_metrics(ctx, metrics):
