@@ -149,27 +149,3 @@ def hash_id(id):
 
 def get_host_mac():
     return ':'.join(['{0:02x}'.format((uuid.getnode() >> i) & 0xff) for i in range(0, 8 * 6, 8)][::-1])
-
-
-def flatten(structure, key="", path="", flattened=None):
-    if flattened is None:
-        flattened = {}
-    if type(structure) not in (dict, list):
-        flattened[((path + ".") if path else "") + key] = structure
-    elif isinstance(structure, list):
-        for i, item in enumerate(structure):
-            flatten(item, "%d" % i, path + "." + key, flattened)
-    else:
-        for new_key, value in structure.items():
-            flatten(value, new_key, path + "." + key, flattened)
-    return flattened
-
-
-def slugify(value):
-    _slugify_strip_re = re.compile(r'[^\w\/\\:]')
-    _slugify_hyphenate_re = re.compile(r'[-\s\\\/]+')
-    if not isinstance(value, unicode):
-        value = unicode(value)
-    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(_slugify_strip_re.sub('', value).strip().lower())
-    return _slugify_hyphenate_re.sub('-', value)
