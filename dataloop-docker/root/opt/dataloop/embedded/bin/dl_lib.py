@@ -37,7 +37,7 @@ def get_containers():
         if container.id[:12] != socket.gethostname():
             return container
         else:
-            logger.debug("This container: %s" % container['id'])
+            logger.debug("This container: %s" % container.id)
 
     return filter(filter_host_container, containers)
 
