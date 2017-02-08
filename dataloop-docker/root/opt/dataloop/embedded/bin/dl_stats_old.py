@@ -118,6 +118,7 @@ def get_memory_metrics(finger, memory_stats):
         memory_path + '.cache': stats.get('cache', None),
         memory_path + '.rss': stats.get('rss', None),
         memory_path + '.swap': stats.get('swap', None),
+        memory_path + '.working_set': calculate_working_set(memory_stats, stats),
         memory_path + '.container_data.pgfault': stats.get('pgfault', None),
         memory_path + '.container_data.pgmajfault': stats.get('pgmajfault', None),
         memory_path + '.hierarchical_data.pgfault': stats.get('total_pgfault', None),
@@ -126,6 +127,17 @@ def get_memory_metrics(finger, memory_stats):
     memory_metrics.update(memory_stats_metrics)
 
     return memory_metrics
+
+def calculate_working_set(memory_stats, stats):
+    working_set = memory_stats.get('usage', 0)
+
+    total_inactive_file = stats.get('total_inactive_file', 0)
+    if working_set < total_inactive_file:
+        working_set = 0
+    else:
+        working_set -= total_inactive_file
+
+    return working_set
 
 
 
