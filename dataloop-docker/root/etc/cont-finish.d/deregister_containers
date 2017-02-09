@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec /usr/bin/python /opt/dataloop/embedded/bin/deregister.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER

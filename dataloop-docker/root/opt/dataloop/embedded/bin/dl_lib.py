@@ -3,6 +3,7 @@ import os
 import uuid
 import docker
 import sys
+import grequests
 import requests
 import re
 import unicodedata
@@ -138,6 +139,18 @@ def get_agents_ids(agents):
         return agent['id']
 
     return set(map(get_agent_id, agents))
+
+
+def deregister_agents(ctx, agent_ids):
+    api_host = ctx['api_host']
+    headers = get_request_headers(ctx)
+
+    def create_request(id):
+        url = "%s/agents/%s/deregister" % (api_host, id)
+        return grequests.post(url, headers=headers)
+
+    reqs = map(create_request, agent_ids)
+    grequests.map(reqs)
 
 
 """
