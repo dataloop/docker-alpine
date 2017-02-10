@@ -1,3 +1,7 @@
 #!/usr/bin/with-contenv sh
 
+if [ ! ${DATALOOP_SERVER} ] ; then
+  DATALOOP_SERVER="https://agent.dataloop.io"
+fi
+
 exec /usr/bin/python /opt/dataloop/embedded/bin/deregister.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER
