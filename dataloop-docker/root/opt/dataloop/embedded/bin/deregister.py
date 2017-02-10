@@ -16,7 +16,7 @@ def main(argv):
     }
 
     try:
-        opts, args = getopt.getopt(argv, "ha:u:", ["help", "apikey=", "apiurl="])
+        opts, args = getopt.getopt(argv, "ha:u", ["help", "apikey=", "apiurl="])
     except getopt.GetoptError, err:
         print str(err)
         usage()
