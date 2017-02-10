@@ -13,6 +13,13 @@ from docker.client import DockerClient
 os.environ['NO_PROXY'] = '127.0.0.1'
 UUID_HASH = uuid.UUID('12345678123456781234567812345678')
 
+system_uuid_paths = [
+    "/sys/class/dmi/id/product_uuid",
+    "/proc/device-tree/system-id",
+    "/proc/device-tree/vm,uuid",
+    "/etc/machine-id",
+]
+
 # logging config for all the py scripts that use dl_lib
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s - %(message)s",
@@ -123,8 +130,8 @@ def get_request_headers(ctx):
 
 
 def get_agents(ctx):
-    host_mac = get_host_mac()
-    agent_api = "%s/agents?mac=%s" % (ctx['api_host'], host_mac)
+    system_uuid = get_system_uuid()
+    agent_api = "%s/agents?mac=%s" % (ctx['api_host'], system_uuid)
 
     try:
         resp = requests.get(agent_api, headers=get_request_headers(ctx), timeout=5)
@@ -160,6 +167,14 @@ MISC UTILS
 def hash_id(id):
     return str(uuid.uuid5(UUID_HASH, id))
 
+def get_system_uuid():
+    for uuid_path in system_uuid_paths:
+        if not os.path.isfile(uuid_path):
+            continue
 
-def get_host_mac():
-    return ':'.join(['{0:02x}'.format((uuid.getnode() >> i) & 0xff) for i in range(0, 8 * 6, 8)][::-1])
+        uuid_file = open(uuid_path)
+        uuid = uuid_file.readline().strip()
+        if uuid:
+            return uuid
+
+    raise OSError("Cannot read system_uuid")

@@ -33,7 +33,7 @@ def ping_containers(ctx, containers):
     api_host = ctx['api_host']
     headers = dl_lib.get_request_headers(ctx)
 
-    host_mac = dl_lib.get_host_mac()
+    system_uuid = dl_lib.get_system_uuid()
     host_name = str(socket.gethostname())
 
     def create_request(container):
@@ -43,7 +43,7 @@ def ping_containers(ctx, containers):
 
         details = {
             'name': container.name,
-            'mac': host_mac,
+            'mac': system_uuid,
             'hostname': host_name,
             'os_name': 'docker',
             'os_version': '',
