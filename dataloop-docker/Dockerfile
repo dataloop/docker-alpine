@@ -12,9 +12,7 @@ RUN apk add --no-cache --update ca-certificates wget device-mapper gcc python-de
     echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf && \
     rm -rf /var/cache/apk/*
 
-RUN mkdir -p /opt/dataloop && wget -q -O /opt/dataloop/cadvisor https://github.com/google/cadvisor/releases/download/v0.24.1/cadvisor
-
-RUN chmod +x /opt/dataloop/cadvisor 
+RUN mkdir -p /opt/dataloop
 
 COPY requirements.txt /
 RUN pip install --upgrade pip && \
