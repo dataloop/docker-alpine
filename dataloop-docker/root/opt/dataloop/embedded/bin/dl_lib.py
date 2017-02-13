@@ -31,7 +31,7 @@ logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s - %(message)s",
 if os.path.exists('/rootfs/var/run/docker.sock'):
     docker_cli = DockerClient(base_url='unix://rootfs/var/run/docker.sock', version='auto')
 else:
-    docker_cli = docker.from_env(assert_hostname=False)
+    docker_cli = docker.from_env(assert_hostname=False, version='auto')
 
 
 """
