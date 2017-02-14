@@ -11,7 +11,7 @@ logger = logging.getLogger('TAG')
 os.environ['NO_PROXY'] = '127.0.0.1'
 
 # will catch (numbers | uuid and hashed strings | garbage)
-label_regex = '^(\d+)|([a-f0-9-]{32,})|(true|false|null|nil|none|undefined)$'
+label_regex = '^(\d+)|([a-f0-9-]{32,})|(true|false|null|nil|none|undefined)|.*[\[\]\{\}].*$'
 label_pattern = re.compile(label_regex)
 
 def tag(ctx):
@@ -47,8 +47,7 @@ def get_tags(ctx, container):
     tags += [dl_lib.get_container_real_host_name()]
     tags += get_container_labels(container)
 
-    tags = [t.replace('/', ':') for t in tags]
-    return set(filter(None, tags))
+    return [t.replace('/', ':') for t in set(filter(None, tags))]
 
 
 def get_container_env_vars(container):

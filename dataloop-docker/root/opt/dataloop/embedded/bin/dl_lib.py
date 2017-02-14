@@ -25,13 +25,14 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s %(name)s %(levelname)s - %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
                     stream=sys.stdout,
-                    level=logging.WARN)
+                    level=logging.INFO)
 
 # connect to the docker server
-if os.path.exists('/rootfs/var/run/docker.sock'):
-    docker_cli = DockerClient(base_url='unix://rootfs/var/run/docker.sock', version='auto')
-else:
-    docker_cli = docker.from_env(assert_hostname=False, version='auto')
+docker_cli = docker.from_env(
+    assert_hostname=False,
+    version='auto',
+    timeout=5,
+)
 
 
 """
@@ -110,12 +111,7 @@ def get_container_env_vars(container):
 
 
 def get_container_real_host_name():
-    try:
-        with open('/rootfs/etc/hostname', 'r') as f:
-            hostname = f.read()
-        return hostname.strip()
-    except:
-        return ""
+    return docker_cli.info()['Name']
 
 
 """
