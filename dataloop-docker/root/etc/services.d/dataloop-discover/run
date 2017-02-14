@@ -6,4 +6,4 @@ fi
 
 echo "Starting dataloop-discover"
 exec /usr/bin/python \
-     /opt/dataloop/embedded/bin/discover.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER >> /var/log/dataloop/discover.log 2>&1
+     /opt/dataloop/embedded/bin/discover.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER

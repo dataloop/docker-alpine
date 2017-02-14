@@ -14,4 +14,4 @@ fi
 
 echo "Starting container metrics collection"
 exec /usr/bin/python \
-     /opt/dataloop/embedded/bin/metrics.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER -s $GRAPHITE_SERVER -p $GRAPHITE_PORT >> /var/log/dataloop/metrics.log 2>&1
+     /opt/dataloop/embedded/bin/metrics.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER -s $GRAPHITE_SERVER -p $GRAPHITE_PORT
