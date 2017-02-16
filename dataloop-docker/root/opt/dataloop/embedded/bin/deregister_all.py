@@ -1,18 +1,24 @@
 import getopt
 import sys
-import dl_lib
+import os
+
+from utils import api, docker_util
+
+os.environ['NO_PROXY'] = '127.0.0.1'
 
 
-def deregister_containers(ctx):
-    containers = dl_lib.get_containers()
-    container_hashes = dl_lib.get_container_hashes(containers)
-    dl_lib.deregister_agents(ctx, container_hashes)
+def deregister_all(ctx):
+    '''used as a cleanup task when dataloop-docker container is stopped'''
+
+    containers = docker_util.list_containers()
+    container_hashes = docker_util.get_container_hashes(containers)
+    api.deregister_agents(ctx, container_hashes)
 
 
 def main(argv):
     ctx = {
         "api_host": "https://agent.dataloop.io",
-        "api_key": None
+        "api_key": None,
     }
 
     try:
@@ -35,7 +41,7 @@ def main(argv):
         usage()
         sys.exit(2)
 
-    deregister_containers(ctx)
+    deregister_all(ctx)
 
 
 def usage():
