@@ -1,9 +1,5 @@
 #!/usr/bin/with-contenv sh
 
-if [ ! ${DATALOOP_SERVER} ] ; then
-  DATALOOP_SERVER="https://agent.dataloop.io"
-fi
-
 if [ ! ${GRAPHITE_SERVER} ] ; then
   GRAPHITE_SERVER="graphite.dataloop.io"
 fi
@@ -14,4 +10,4 @@ fi
 
 echo "Starting container metrics collection"
 exec /usr/bin/python \
-     /opt/dataloop/embedded/bin/metrics.py -a $DATALOOP_AGENT_KEY -u $DATALOOP_SERVER -s $GRAPHITE_SERVER -p $GRAPHITE_PORT
+     /opt/dataloop/embedded/bin/metrics.py -s $GRAPHITE_SERVER -p $GRAPHITE_PORT
