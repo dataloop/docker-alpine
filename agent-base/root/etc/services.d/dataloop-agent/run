@@ -1,5 +1,9 @@
 #!/usr/bin/with-contenv sh
 
+if [ ! ${DATALOOP_DEBUG} ] ; then
+  DATALOOP_DEBUG="no"
+fi
+
 if [ ! ${DATALOOP_SERVER} ] ; then
   DATALOOP_SERVER="wss://agent.dataloop.io"
 fi
@@ -19,6 +23,8 @@ fingerprint = ${DATALOOP_FINGERPRINT}
 EOF
 fi
 
+echo "setting debug level"
+sed -e 's/<<DEBUG>>/'"${DATALOOP_DEBUG}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop apikey"
 sed -e 's/<<APIKEY>>/'"${DATALOOP_AGENT_KEY}"'/' -i /etc/dataloop/agent.yaml
 echo "sedding dataloop server"

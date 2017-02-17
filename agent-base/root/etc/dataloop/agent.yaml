@@ -4,7 +4,7 @@
 solo: no
 
 ## Set to yes to create lots of logs
-debug: no
+debug: <<DEBUG>>
 
 ## The dataloop api key
 api-key: <<APIKEY>>
