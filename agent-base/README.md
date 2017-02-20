@@ -32,6 +32,8 @@ This docker image will accept various other environment variables to allow you t
 
 `DATALOOP_FINGERPRINT` *Optional* You can pass an existing fingerprint if you want to keep your data association in Dataloop. *Default* None
 
+`DATALOOP_DEBUG` *Optional* You can pass in the debug flag `yes/no` or `true/false` to add extra logging to the agent. *Default* no
+
 
 EXPOSED PORTS
 =============
