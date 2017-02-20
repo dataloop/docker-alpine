@@ -37,7 +37,7 @@ def ping_containers(ctx, containers, system_uuid):
             'finger': docker_util.get_hash(container),
             'name': container.name,
             'mac': system_uuid,
-            'hostname': docker_util.get_hostname(),
+            'hostname': docker_util.get_container_hostname(container),
             'os_name': 'docker',
             'os_version': '',
             'processes': docker_util.get_processes(container),
@@ -89,7 +89,8 @@ def _get_agent_tags(container):
     tags = ["all", "docker"]
 
     tags.append(docker_util.get_image(container))
-    tags.append(docker_util.get_hostname())
+    tags.append(docker_util.get_host_hostname())
+    tags.append(docker_util.get_container_hostname(container))
     tags += _get_agent_env_vars(container)
     tags += docker_util.get_labels(container)
 

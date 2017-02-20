@@ -105,7 +105,11 @@ def get_labels(container):
     return filter(filter_labels, labels)
 
 
-def get_hostname():
+def get_container_hostname(container):
+    return container.id[:12]
+
+
+def get_host_hostname():
     '''return the `Name` from `docker info`'''
     try:
         return docker_client.info().get("Name")
