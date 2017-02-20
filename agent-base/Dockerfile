@@ -4,6 +4,7 @@ MAINTAINER Tom Ashley <tom@dataloop.io>
 ADD agent /opt/dataloop/agent
 
 RUN apk add --no-cache --update \
+      bash \
       curl \
       python \
       python-dev \
