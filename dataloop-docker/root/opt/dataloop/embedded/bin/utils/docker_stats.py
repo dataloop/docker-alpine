@@ -1,5 +1,5 @@
 import time
-import dl_stats_old
+import docker_stats_old
 
 
 RATE_INTERVAL = 5
@@ -8,13 +8,24 @@ RATE_INTERVAL = 5
 def get_metrics(containers):
     metrics = {}
 
-    for c in containers: c.prev_stats = c.stats(stream=False)
+    for c in containers:
+        try:
+            c.prev_stats = c.stats(stream=False)
+        except Exception, e:
+            c.prev_stats = None
+
     time.sleep(RATE_INTERVAL)
-    for c in containers: c.now_stats = c.stats(stream=False)
+
+    for c in containers:
+        try:
+            c.now_stats = c.stats(stream=False)
+        except Exception, e:
+            c.now_stats = None
 
     for container in containers:
-        container_metrics = get_container_metrics(container)
-        metrics.update(container_metrics)
+        if container.prev_stats and container.now_stats:
+            container_metrics = get_container_metrics(container)
+            metrics.update(container_metrics)
 
     return metrics
 
@@ -28,7 +39,7 @@ def get_container_metrics(container):
 
     base_metrics.update(get_base_metrics(finger, prev_stats, now_stats))
     # legacy, cadvisor type metrics
-    base_metrics.update(dl_stats_old.get_metrics(finger, now_stats))
+    base_metrics.update(docker_stats_old.get_metrics(finger, now_stats))
 
     return base_metrics
 

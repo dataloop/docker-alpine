@@ -1,40 +1,24 @@
 import getopt
-import logging
 import sys
-import time
-import dl_lib
 import os
 
-logger = logging.getLogger('DISCOVER')
+from utils import api, docker_util
+
 os.environ['NO_PROXY'] = '127.0.0.1'
 
 
-def registration(ctx):
-    logger.info("register sync")
+def deregister_all(ctx):
+    '''used as a cleanup task when dataloop-docker container is stopped'''
 
-    try:
-        register_sync(ctx)
-    except Exception as ex:
-        logger.error("register sync failed: %s" % ex, exc_info=True)
-
-
-def register_sync(ctx):
-        agents = dl_lib.get_agents(ctx)
-        agent_ids = dl_lib.get_agents_ids(agents)
-
-        containers = dl_lib.get_containers()
-        container_hashes = dl_lib.get_container_hashes(containers)
-
-        logger.debug("agent_ids=%s container_hashes=%s", agent_ids, container_hashes)
-        dead_containers = agent_ids - container_hashes
-        dl_lib.deregister_agents(ctx, dead_containers)
+    containers = docker_util.list_containers()
+    container_hashes = docker_util.get_container_hashes(containers)
+    api.deregister_agents(ctx, container_hashes)
 
 
 def main(argv):
     ctx = {
-        "register_interval": 30,
         "api_host": "https://agent.dataloop.io",
-        "api_key": None
+        "api_key": None,
     }
 
     try:
@@ -57,13 +41,11 @@ def main(argv):
         usage()
         sys.exit(2)
 
-    while True:
-        registration(ctx)
-        time.sleep(ctx['register_interval'])
+    deregister_all(ctx)
 
 
 def usage():
-    usage = """discover.py
+    usage = """deregister.py
     -h --help                   Prints this
     -a --apikey <apikey>        Your dataloop api key
     -u --apiurl <apiurl>        The dataloop api url (default to "https://agent.dataloop.io")
