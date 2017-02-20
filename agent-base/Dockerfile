@@ -41,7 +41,6 @@ RUN apk add --no-cache --update \
 
     apk del \
       python-dev \
-      py-pip \
       gcc \
       musl-dev \
       linux-headers \
