@@ -4,11 +4,13 @@
 ###############################
 
 
-# missing: diskio
+
 def get_metrics(finger, stats):
     metrics = {}
 
-    metrics.update(get_network_metrics(finger, stats['networks']))
+    if 'networks' in stats:
+        metrics.update(get_network_metrics(finger, stats['networks']))
+
     metrics.update(get_cpu_metrics(finger, stats['cpu_stats']))
     metrics.update(get_memory_metrics(finger, stats['memory_stats']))
     metrics.update(get_diskio_metrics(finger, stats['blkio_stats']))

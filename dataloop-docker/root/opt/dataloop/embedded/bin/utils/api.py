@@ -16,9 +16,9 @@ def list_agents(ctx, mac):
         resp = requests.get(url, headers=headers, timeout=API_TIMEOUT)
         resp.raise_for_status()
         return resp.json()
-    except:
-        logger.warn(url, "| request failed")
-
+    except Exception as exception:
+        logger.error("request failed: %s" % url)
+        raise exception
 
 def deregister_agents(ctx, agent_ids):
     api_host = ctx['api_host']
@@ -67,4 +67,5 @@ def _get_request_headers(ctx):
     }
 
 def _grequest_exception_handler(request, exception):
-    logger.warn(request.url, "| request failed")
+    logger.error("request failed: %s" % request.url)
+    raise exception

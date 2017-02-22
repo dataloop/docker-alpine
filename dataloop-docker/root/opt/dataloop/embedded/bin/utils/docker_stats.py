@@ -1,6 +1,8 @@
 import time
+import logging
 import docker_stats_old
 
+logger = logging.getLogger('DOCKERSTATS')
 
 RATE_INTERVAL = 5
 
@@ -8,26 +10,24 @@ RATE_INTERVAL = 5
 def get_metrics(containers):
     metrics = {}
 
-    for c in containers:
-        try:
-            c.prev_stats = c.stats(stream=False)
-        except Exception, e:
-            c.prev_stats = None
-
+    record_containers_stats(containers, "prev_stats")
     time.sleep(RATE_INTERVAL)
-
-    for c in containers:
-        try:
-            c.now_stats = c.stats(stream=False)
-        except Exception, e:
-            c.now_stats = None
+    record_containers_stats(containers, "now_stats")
 
     for container in containers:
         if container.prev_stats and container.now_stats:
             container_metrics = get_container_metrics(container)
             metrics.update(container_metrics)
-
     return metrics
+
+
+def record_containers_stats(containers, key):
+    for container in containers:
+        try:
+            setattr(container, key, container.stats(stream=False, decode=True))
+        except Exception, e:
+            logger.warn("can't read container %s stats: %s" % (container.name, e))
+            setattr(container, key, None)
 
 
 def get_container_metrics(container):
@@ -38,13 +38,14 @@ def get_container_metrics(container):
     now_stats  = container.now_stats
 
     base_metrics.update(get_base_metrics(finger, prev_stats, now_stats))
-    # legacy, cadvisor type metrics
+    # deprecated, cadvisor type metrics
     base_metrics.update(docker_stats_old.get_metrics(finger, now_stats))
 
     return base_metrics
 
 
 def get_base_metrics(finger, prev_stats, stats):
+
     base_path = finger + '.base'
 
     # missing: load_1_min and load_fractional
@@ -55,7 +56,8 @@ def get_base_metrics(finger, prev_stats, stats):
         base_path + '.swap': get_swap_percent(stats['memory_stats']),
     }
 
-    base_stats.update(get_base_network_metrics(base_path, prev_stats['networks'], stats['networks']))
+    if ('networks' in prev_stats) and ('networks' in stats):
+        base_stats.update(get_base_network_metrics(base_path, prev_stats['networks'], stats['networks']))
 
     return base_stats
 
