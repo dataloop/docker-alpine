@@ -40,7 +40,7 @@ def tag_agents(ctx, agents):
 
     def create_request(agent):
         url = "%s/agents/%s/tags" % (api_host, agent['finger'])
-        return grequests.put(url, json=agent, headers=headers)
+        return grequests.put(url, json=agent, headers=headers, timeout=API_TIMEOUT)
 
     reqs = map(create_request, agents)
     grequests.map(reqs, exception_handler=_grequest_exception_handler)
