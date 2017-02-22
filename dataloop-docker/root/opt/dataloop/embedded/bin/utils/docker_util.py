@@ -52,12 +52,12 @@ def get_hash(container):
 
 
 def get_image(container):
-    return container.attrs.get('Config', {}).get('Image', "")
+    return container.attrs.get('Config', {}).get('Image', "") or ""
 
 
 def get_processes(container):
     '''get and group/count the processes running inside the container'''
-    docker_processes = container.top().get("Processes", [])
+    docker_processes = container.top().get("Processes", []) or []
 
     def extract_docker_processes(process):
         return process[len(process) -1]
@@ -75,7 +75,7 @@ def get_processes(container):
 
 def get_ips(container):
     '''return a list of ip addresses of all the container networks'''
-    container_networks = container.attrs.get("NetworkSettings", {}).get("Networks", {})
+    container_networks = container.attrs.get("NetworkSettings", {}).get("Networks", {}) or {}
 
     def map_container_network(network):
         return network.get("IPAddress", None)
@@ -101,8 +101,8 @@ def get_labels(container):
     def filter_labels(label):
         return not label_pattern.match(label.lower())
 
-    labels = container.attrs.get('Config', {}).get('Labels', {}).values()
-    return filter(filter_labels, labels)
+    labels = container.attrs.get('Config', {}).get('Labels', {}) or {}
+    return filter(filter_labels, labels.values())
 
 
 def get_container_hostname(container):
