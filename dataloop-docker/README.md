@@ -14,8 +14,7 @@ DATALOOP_NAME=docker_container_name
 docker run -d -e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
 -e "DATALOOP_NAME=${DATALOOP_NAME}" \
 -p 8000:8000 \
---volume=/:/rootfs:ro \
---volume=/var/run:/var/run:rw \
+--volume=/var/run/docker.sock:/var/run/docker.sock:rw \
 --volume=/sys:/sys:ro \
 --volume=/var/lib/docker/:/var/lib/docker:ro \
 dataloop/dataloop-docker:latest
