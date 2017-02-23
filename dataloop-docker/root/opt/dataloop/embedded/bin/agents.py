@@ -43,7 +43,7 @@ def ping_containers(ctx, containers, system_uuid):
             'processes': docker_util.get_processes(container),
             'container': '001',
             'interfaces': _get_agent_interface(container),
-            'mode': 'SOLO'
+            'mode': 'DEFAULT'
         }
 
     agents = map(create_agent, containers)
