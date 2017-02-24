@@ -86,7 +86,8 @@ def _get_agent_interface(container):
 
 
 def _get_agent_tags(container):
-    tags = ["all", "docker"]
+    cnt_id_tag = "container:%s" % docker_util.get_container_hostname(container)
+    tags = ["all", "docker", cnt_id_tag]
 
     tags.append(docker_util.get_image(container))
     tags.append(docker_util.get_host_hostname())
