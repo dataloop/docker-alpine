@@ -3,6 +3,8 @@ import logging
 import sys
 import time
 import os
+import requests
+
 from utils import api, docker_util, logger_util
 
 logger = logging.getLogger('AGENTS')
@@ -19,16 +21,20 @@ def sync(ctx):
     logger.info("agents sync")
 
     try:
+        host_finger = get_host_finger()
         containers = docker_util.list_containers()
         system_uuid = docker_util.get_system_uuid(ctx)
 
         ping_containers(ctx, containers, system_uuid)
-        tag_containers(ctx, containers)
+        tag_containers(ctx, containers, host_finger)
         deregister_dead_containers(ctx, containers, system_uuid)
 
     except Exception as ex:
         logger.error("agent sync failed: %s" % ex, exc_info=True)
 
+
+def get_host_finger():
+    return requests.get("http://localhost:8000").text
 
 def ping_containers(ctx, containers, system_uuid):
 
@@ -43,19 +49,20 @@ def ping_containers(ctx, containers, system_uuid):
             'processes': docker_util.get_processes(container),
             'container': '001',
             'interfaces': _get_agent_interface(container),
-            'mode': 'DEFAULT'
+            'mode': 'DEFAULT',
+            'interpreter': '/usr/bin/python'
         }
 
     agents = map(create_agent, containers)
     api.ping_agents(ctx, agents)
 
 
-def tag_containers(ctx, containers):
+def tag_containers(ctx, containers, host_finger):
 
     def create_tags(container):
         return {
             'finger': docker_util.get_hash(container),
-            'tags': _get_agent_tags(container)
+            'tags': _get_agent_tags(container, host_finger)
         }
 
     agents = map(create_tags, containers)
@@ -85,10 +92,11 @@ def _get_agent_interface(container):
     return interfaces
 
 
-def _get_agent_tags(container):
-    cnt_id_tag = "container:%s" % docker_util.get_container_hostname(container)
-    tags = ["all", "docker", cnt_id_tag]
+def _get_agent_tags(container, host_finger):
+    tags = ["all", "docker"]
 
+    tags.append("container:%s" % docker_util.get_container_hostname(container))
+    tags.append("parent:%s" % host_finger)
     tags.append(docker_util.get_image(container))
     tags.append(docker_util.get_host_hostname())
     tags.append(docker_util.get_container_hostname(container))
