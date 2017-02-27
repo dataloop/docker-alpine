@@ -21,8 +21,7 @@ system_uuid_paths = [
 label_regex = '^(\d+)|([a-f0-9-]{32,})|(true|false|null|nil|none|undefined)|.*[\[\]\{\}].*$'
 label_pattern = re.compile(label_regex)
 
-DOCKER_VERSION = 'auto'
-DOCKER_TIMEOUT = 5
+is_k8s = 'KUBERNETES_PORT' in os.environ
 
 # connect to the docker server
 docker_client = docker.from_env(
@@ -33,13 +32,13 @@ docker_client = docker.from_env(
 
 
 def list_containers():
-    '''return a list of running containers, excluding the dataloop-docker one'''
+    '''return a list of running containers'''
     containers = docker_client.containers.list()
 
-    def filter_host_container(container):
-        return container.id[:12] != socket.gethostname()
+    if is_k8s:
+        return filter(_filter_kube_container, containers)
 
-    return filter(filter_host_container, containers)
+    return filter(_filter_host_container, containers)
 
 
 def get_container_hashes(containers):
@@ -136,3 +135,22 @@ def get_system_uuid(ctx):
 
 def _hash_id(id):
     return str(uuid.uuid5(UUID_HASH, id))
+
+
+# exclude the dataloop-docker container
+def _filter_host_container(container):
+    return container.id[:12] != socket.gethostname()
+
+
+# exclude "kube-system" and paused containers
+def _filter_kube_container(container):
+    config = container.attrs.get('Config', {}) or {}
+
+    image = config.get('Image', "") or ""
+    labels = config.get('Labels', {}) or {}
+
+    is_kube_system = labels["io.kubernetes.pod.namespace"] == "kube-system"
+    is_paused = re.search("google_containers/pause", image)
+    is_host = labels["io.kubernetes.pod.name"] == socket.gethostname()
+
+    return not is_kube_system and not is_paused and not is_host
