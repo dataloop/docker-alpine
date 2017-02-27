@@ -91,7 +91,7 @@ def get_memory_stats(rootfs, cgroup_path):
 
 
 def _format_memory_metrics(stats, host_memory):
-    mem_used = int(stats.get('rss')) + int(stats.get('cache')) + int(stats.get('swap'))
+    mem_used = int(stats.get('rss'), 0) + int(stats.get('cache', 0)) + int(stats.get('swap', 0))
 
     metrics = {
         "used":     mem_used,
@@ -127,7 +127,7 @@ def _format_memory_metrics(stats, host_memory):
 
     if swap_limit:
         swap_limit = swap_limit * 1024
-        swap = float(stats.get("swap")) / float(swap_limit)
+        swap = float(stats.get("swap", 0)) / float(swap_limit)
         metrics["swap"] = round(swap, 2)
 
     return metrics
