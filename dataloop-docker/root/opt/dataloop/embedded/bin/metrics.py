@@ -17,7 +17,8 @@ def send_metrics(ctx):
         for c in containers:
             c.finger = docker_util.get_hash(c)
 
-        metrics = docker_stats.get_metrics(containers)
+        #TODO: "/rootfs" passed in ctx by user 
+        metrics = docker_stats2.get_metrics("/rootfs", containers)
         publish_metrics(ctx, metrics)
 
     except Exception as ex:

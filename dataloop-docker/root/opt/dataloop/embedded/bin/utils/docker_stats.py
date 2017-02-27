@@ -1,152 +1,157 @@
-import time
 import logging
-import docker_stats_old
+import cgroups
+import time
 
 logger = logging.getLogger('DOCKERSTATS')
 
 RATE_INTERVAL = 5
 
 
-def get_metrics(containers):
+def get_metrics(rootfs, containers):
     metrics = {}
+    mountpoints = cgroups.get_mountpoints(rootfs)
 
-    record_containers_stats(containers, "prev_stats")
+    _get_containers_stats(rootfs, mountpoints, containers, "prev_stats")
     time.sleep(RATE_INTERVAL)
-    record_containers_stats(containers, "now_stats")
+    _get_containers_stats(rootfs, mountpoints, containers, "now_stats")
 
     for container in containers:
-        if container.prev_stats and container.now_stats:
-            container_metrics = get_container_metrics(container)
-            metrics.update(container_metrics)
+        container_metrics = _get_container_metrics(container)
+        metrics.update(container_metrics)
+
     return metrics
 
 
-def record_containers_stats(containers, key):
+def _get_containers_stats(rootfs, mountpoints, containers, key):
     for container in containers:
-        try:
-            setattr(container, key, container.stats(stream=False, decode=True))
-        except Exception, e:
-            logger.warn("can't read container %s stats: %s" % (container.name, e))
-            setattr(container, key, None)
+        stats = _get_container_stats(rootfs, mountpoints, container)
+        setattr(container, key, stats)
 
 
-def get_container_metrics(container):
-    base_metrics = {}
+def _get_container_stats(rootfs, mountpoints, container):
+    container_cgroups = cgroups.find_container_cgroups(rootfs, mountpoints, container)
+    stats = {
+        "net":      cgroups.get_net_stats(rootfs, container),
+        "blkio":    cgroups.get_blkio_stats(container_cgroups["blkio"]),
+        "cpuacct":  cgroups.get_cpu_stats(rootfs, container_cgroups["cpuacct"]),
+        "memory":   cgroups.get_memory_stats(container_cgroups["memory"]),
+    }
 
-    finger = container.finger
+    return stats
+
+
+def _get_container_metrics(container):
+    base_path = container.finger + '.base'
+    metrics = {
+        base_path + '.count': 1
+    }
+
+    now_stats = container.now_stats
     prev_stats = container.prev_stats
-    now_stats  = container.now_stats
 
-    base_metrics.update(get_base_metrics(finger, prev_stats, now_stats))
-    # deprecated, cadvisor type metrics
-    base_metrics.update(docker_stats_old.get_metrics(finger, now_stats))
+    metrics.update(_get_disk_metrics(base_path, now_stats.get('blkio'), prev_stats.get('blkio')))
+    metrics.update(_get_cpu_metrics(base_path, now_stats.get('cpuacct'), prev_stats.get('cpuacct')))
+    metrics.update(_get_memory_metrics(base_path, now_stats.get('memory')))
+    metrics.update(_get_network_metrics(base_path, now_stats.get('net'), prev_stats.get('net')))
 
-    return base_metrics
+    return metrics
 
 
-def get_base_metrics(finger, prev_stats, stats):
+"""
+disk metrics
+"""
 
-    base_path = finger + '.base'
+def _get_disk_metrics(base_path, now_stats, prev_stats):
+    disk_path = base_path + '.disk'
+    metrics = {}
 
-    # missing: load_1_min and load_fractional
-    base_stats = {
-        base_path + '.count': 1,
-        base_path + '.cpu': get_base_cpu_percent(stats),
-        base_path + '.memory': get_memory_percent(stats['memory_stats']),
-        base_path + '.swap': get_swap_percent(stats['memory_stats']),
+    for metric, value in now_stats.iteritems():
+        path = disk_path + '.' + metric
+        per_sec_path = path + '_per_sec'
+
+        metrics[path] = value
+        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / RATE_INTERVAL
+
+    return metrics
+
+
+"""
+cpu metrics
+"""
+
+
+def _get_cpu_metrics(base_path, now_stats, prev_stats):
+    cpu_path = base_path + '.cpu'
+    num_cores = now_stats.get('cores')
+
+    system_percent, user_percent, usage_percent = 0.0, 0.0, 0.0
+    total_delta = now_stats.get('total') - prev_stats.get('total')
+
+    if total_delta > 0:
+        total_delta_per_sec = float(total_delta) / RATE_INTERVAL
+
+        usage_delta = now_stats.get('usage') - prev_stats.get('usage')
+        if usage_delta > 0:
+            usage_delta_per_sec = float(usage_delta) / RATE_INTERVAL
+            usage_percent = usage_delta_per_sec / total_delta_per_sec * num_cores * 100
+
+        system_delta = now_stats.get("system") - prev_stats.get('system')
+        if system_delta > 0:
+            system_delta_per_sec = float(system_delta) / RATE_INTERVAL
+            system_percent = system_delta_per_sec / total_delta_per_sec * num_cores * 100
+
+        user_delta = now_stats.get('user') - prev_stats.get('user')
+        if user_delta > 0:
+            user_delta_per_sec = float(user_delta) / RATE_INTERVAL
+            user_percent = user_delta_per_sec / total_delta_per_sec * num_cores * 100
+
+    metrics = {
+        cpu_path + '.cores': num_cores,
+        cpu_path + '.user': user_percent,
+        cpu_path + '.system': system_percent,
+        cpu_path: usage_percent,
     }
 
-    if ('networks' in prev_stats) and ('networks' in stats):
-        base_stats.update(get_base_network_metrics(base_path, prev_stats['networks'], stats['networks']))
-
-    return base_stats
-
+    return metrics
 
 
 """
-base cpu metrics
+memory metrics
 """
 
-def get_base_cpu_percent(stats):
-    cpu_percent = 0
-    num_cores = len(stats['cpu_stats']['cpu_usage']['percpu_usage'])
+def _get_memory_metrics(base_path, stats):
+    memory_path = base_path + '.memory'
 
-    cpu_usage = stats['cpu_stats']['cpu_usage']['total_usage']
-    system_usage = stats['cpu_stats']['system_cpu_usage']
+    metrics = {}
+    for metric, value in stats.iteritems():
+        if metric in ["memory", "swap"]:
+            path = base_path + '.' + metric
+        else:
+            path = memory_path + '.' + metric
+        metrics[path] = value
 
-    prev_cpu_usage = stats['precpu_stats']['cpu_usage']['total_usage']
-    prev_system_usage = stats['precpu_stats']['system_cpu_usage']
-
-    # calculate the change for the cpu usage of the container in between readings
-    cpu_delta = cpu_usage - prev_cpu_usage
-
-    # calculate the change for the entire system between readings
-    system_delta = system_usage - prev_system_usage
-
-    if system_delta > 0 and cpu_delta > 0:
-        cpu_percent = float(cpu_delta) / float(system_delta) * num_cores * 100
-
-    return cpu_percent
-
+    return metrics
 
 
 """
-base memory metrics
+network metrics
 """
 
+def _get_network_metrics(base_path, now_stats, prev_stats):
+    network_path = base_path + '.network'
+    metrics = {}
 
-def get_memory_percent(memory_stats):
-    memory_usage = memory_stats.get('usage', None)
-    memory_limit = memory_stats.get('limit', None)
+    for metric, value in now_stats.iteritems():
+        path = network_path + '.' + metric
+        per_sec_path = path + '_per_sec'
 
-    if memory_usage is None or memory_limit is None:
-        return None
+        metrics[path] = value
+        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / RATE_INTERVAL
 
-    return float(memory_usage) / float(memory_limit) * 100
+        if metric == 'bytes_recv':
+            metrics[base_path + '.net_download'] = metrics[per_sec_path] / 1024
 
+        elif metric == 'bytes_sent':
+            metrics[base_path + '.net_upload'] = metrics[per_sec_path] / 1024
 
-def get_swap_percent(memory_stats):
-    swap_percent = 0
-    stats = memory_stats.get('stats', {})
-
-    swap_usage = stats.get('swap', None)
-    swap_total = stats.get('total_swap', None)
-
-    if swap_usage is None or swap_total is None:
-        return None
-
-    if swap_usage > 0 and swap_total > 0:
-        swap_percent = float(swap_usage) / float(swap_total) * 100.0
-
-    return swap_percent
-
-
-
-"""
-base network metrics
-"""
-
-
-def get_base_network_metrics(base_path, prev_stats, stats):
-    prev_network_stats = calculate_base_network_stats(prev_stats)
-    network_stats = calculate_base_network_stats(stats)
-
-    net_upload = (network_stats['tx_bytes'] - prev_network_stats['tx_bytes']) / 1024 / RATE_INTERVAL
-    net_download = (network_stats['rx_bytes'] - prev_network_stats['rx_bytes']) / 1024 / RATE_INTERVAL
-
-    network_metrics = {
-        base_path + '.net_upload': net_upload,
-        base_path + '.net_download': net_download,
-    }
-
-    return network_metrics
-
-
-def calculate_base_network_stats(network_stats):
-    base_network_stats = {'rx_bytes': 0, 'tx_bytes': 0}
-
-    for key, value in network_stats.items():
-        base_network_stats['rx_bytes'] +=  value['rx_bytes']
-        base_network_stats['tx_bytes'] +=  value['tx_bytes']
-
-    return base_network_stats
+    return metrics
