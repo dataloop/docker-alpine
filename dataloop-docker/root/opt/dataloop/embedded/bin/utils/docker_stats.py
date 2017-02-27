@@ -34,7 +34,7 @@ def _get_container_stats(rootfs, mountpoints, container):
         "net":      cgroups.get_net_stats(rootfs, container),
         "blkio":    cgroups.get_blkio_stats(container_cgroups["blkio"]),
         "cpuacct":  cgroups.get_cpu_stats(rootfs, container_cgroups["cpuacct"]),
-        "memory":   cgroups.get_memory_stats(container_cgroups["memory"]),
+        "memory":   cgroups.get_memory_stats(rootfs, container_cgroups["memory"]),
     }
 
     return stats

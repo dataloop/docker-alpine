@@ -83,15 +83,19 @@ def find_container_cgroups(rootfs, mountpoints, container):
 memory stats
 """
 
-def get_memory_stats(cgroup_path):
+def get_memory_stats(rootfs, cgroup_path):
+    host_memory = _parse_host_memory_file(rootfs)
     stats = _parse_cgroup_file(cgroup_path, "memory.stat")
-    return _format_memory_metrics(stats)
+
+    return _format_memory_metrics(stats, host_memory)
 
 
-def _format_memory_metrics(stats):
+def _format_memory_metrics(stats, host_memory):
+    mem_used = int(stats.get('rss')) + int(stats.get('cache')) + int(stats.get('swap'))
+
     metrics = {
-        "used":     stats.get("rss"),
-        "used_gb":  _bytes_to_gb(stats.get("rss")),
+        "used":     mem_used,
+        "used_gb":  _bytes_to_gb(mem_used),
         "cached":   stats.get("cache"),
     }
 
@@ -101,24 +105,55 @@ def _format_memory_metrics(stats):
     if "inactive_file" in stats and "inactive_anon" in stats:
         metrics['inactive'] = int(stats.get("inactive_file")) + int(stats.get("inactive_anon"))
 
+
+    # if the container has no memory limit, use host memory instead
     mem_limit = stats.get("hierarchical_memory_limit")
+    if mem_limit > host_memory.get("total"):
+        mem_limit = host_memory.get("total") or None
+
     swap_limit = stats.get("hierarchical_memsw_limit")
+    if swap_limit > host_memory.get("swap"):
+        swap_limit = host_memory.get("swap") or None
 
-    # to check if the limits are set, check if the limit has "reasonable" value
-    is_mem_limit_set = mem_limit and mem_limit < (2 ** 31 - 1)
-    is_swap_limit_set = swap_limit and swap_limit < (2 ** 31 -1)
-
-    if is_mem_limit_set:
+    if mem_limit:
+        mem_limit = mem_limit * 1024
         metrics["total"] = mem_limit
         metrics["total_gb"] = _bytes_to_gb(mem_limit)
-        metrics["available"] = int(mem_limit) - int(stats.get("rss"))
+        metrics["available"] = int(mem_limit) - mem_used
         metrics["available_gb"] = _bytes_to_gb(metrics["available"])
-        metrics["memory"] = float(stats.get("rss")) / float(mem_limit) * 100.0
 
-    if is_swap_limit_set:
-        metrics["swap"] = float(stats.get("swap") + flat(stats.get("rss"))) / float(swap_limit)
+        memory = float(mem_used) / float(mem_limit) * 100.0
+        metrics["memory"] = round(memory, 2)
+
+    if swap_limit:
+        swap_limit = swap_limit * 1024
+        swap = float(stats.get("swap")) / float(swap_limit)
+        metrics["swap"] = round(swap, 2)
 
     return metrics
+
+def _parse_host_memory_file(rootfs):
+    host_memory = {}
+
+    try:
+        path = os.path.join(rootfs, "/proc/meminfo")
+        with open(path, 'r') as fp:
+            lines = fp.readlines()
+
+            for l in lines:
+                cols = l.split(':')
+                name =  str(cols[0]).strip()
+                if name == 'MemTotal':
+                    host_memory["total"] = int(cols[1].strip().split(' ')[0])
+                elif name == "SwapTotal":
+                    host_memory["swap"] = int(cols[1].strip().split(' ')[0])
+
+            return host_memory
+
+    except IOError:
+        logger.warn("can't open %s. metrics will be missing" % path)
+        return host_memory
+
 
 
 """
@@ -217,7 +252,7 @@ def _parse_cpu_total_file(rootfs):
                     total = sum(int(c) for c in cols[2:10])
             return total
 
-    except Exception:
+    except IOError:
         logger.error("can't open %s. cpu metrics will be missing" % (stat_path))
         return total
 
