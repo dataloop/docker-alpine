@@ -45,7 +45,7 @@ def main(argv):
     }
 
     try:
-        opts, args = getopt.getopt(argv, "hs:p:d", ["help", "graphiteserver=", "graphiteport=", "debug"])
+        opts, args = getopt.getopt(argv, "hs:p:r:d", ["help", "graphiteserver=", "graphiteport=", "rootfs=", "debug"])
 
     except getopt.GetoptError, err:
         print str(err)

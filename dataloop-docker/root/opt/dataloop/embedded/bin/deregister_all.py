@@ -4,12 +4,11 @@ import os
 
 from utils import api, docker_util
 
-os.environ['NO_PROXY'] = '127.0.0.1'
+os.environ["NO_PROXY"] = "127.0.0.1"
 
 
 def deregister_all(ctx):
-    '''used as a cleanup task when dataloop-docker container is stopped'''
-
+    """Used as a cleanup task when dataloop-docker container is stopped."""
     containers = docker_util.list_containers()
     container_hashes = docker_util.get_container_hashes(containers)
     api.deregister_agents(ctx, container_hashes)
@@ -33,11 +32,11 @@ def main(argv):
             usage()
             sys.exit(2)
         elif opt in ("-a", "--apikey"):
-            ctx['api_key'] = arg
+            ctx["api_key"] = arg
         elif opt in ("-u", "--apiurl"):
-            ctx['api_host'] = arg
+            ctx["api_host"] = arg
 
-    if ctx['api_key'] is None:
+    if ctx["api_key"] is None:
         usage()
         sys.exit(2)
 
