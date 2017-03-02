@@ -2,15 +2,14 @@ import logging
 import requests
 import grequests
 
-logger = logging.getLogger('API')
+logger = logging.getLogger("API")
 
 API_TIMEOUT = 5
 
 
 def list_agents(ctx, mac):
-    '''list agents with the same mac address'''
-
-    url = "%s/agents?mac=%s" % (ctx['api_host'], mac)
+    """List agents with the same mac address."""
+    url = "%s/agents?mac=%s" % (ctx["api_host"], mac)
     headers = _get_request_headers(ctx)
     try:
         resp = requests.get(url, headers=headers, timeout=API_TIMEOUT)
@@ -20,8 +19,9 @@ def list_agents(ctx, mac):
         logger.error("request failed: %s" % url)
         raise exception
 
+
 def deregister_agents(ctx, agent_ids):
-    api_host = ctx['api_host']
+    api_host = ctx["api_host"]
     headers = _get_request_headers(ctx)
 
     def create_request(id):
@@ -33,13 +33,12 @@ def deregister_agents(ctx, agent_ids):
 
 
 def tag_agents(ctx, agents):
-    '''update agent tags, will completely replace previous ones'''
-
-    api_host = ctx['api_host']
+    """Update agent tags, will completely replace previous ones."""
+    api_host = ctx["api_host"]
     headers = _get_request_headers(ctx)
 
     def create_request(agent):
-        url = "%s/agents/%s/tags" % (api_host, agent['finger'])
+        url = "%s/agents/%s/tags" % (api_host, agent["finger"])
         return grequests.put(url, json=agent, headers=headers, timeout=API_TIMEOUT)
 
     reqs = map(create_request, agents)
@@ -47,13 +46,12 @@ def tag_agents(ctx, agents):
 
 
 def ping_agents(ctx, agents):
-    '''send a ping to the exchange, will also register agents if they arent already'''
-
-    api_host = ctx['api_host']
+    """Send a ping to the exchange, will also register agents if they arent already."""
+    api_host = ctx["api_host"]
     headers = _get_request_headers(ctx)
 
     def create_request(agent):
-        url = "%s/agents/%s/ping" % (api_host, agent['finger'])
+        url = "%s/agents/%s/ping" % (api_host, agent["finger"])
         return grequests.post(url, json=agent, headers=headers, timeout=API_TIMEOUT)
 
     reqs = map(create_request, agents)
@@ -63,8 +61,9 @@ def ping_agents(ctx, agents):
 def _get_request_headers(ctx):
     return {
         "Content-type": "application/json",
-        "Authorization": "Bearer " + ctx['api_key']
+        "Authorization": "Bearer " + ctx["api_key"]
     }
+
 
 def _grequest_exception_handler(request, exception):
     logger.error("request failed: %s" % request.url)

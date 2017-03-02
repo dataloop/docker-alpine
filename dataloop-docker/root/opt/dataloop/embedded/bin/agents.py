@@ -13,7 +13,7 @@ os.environ['NO_PROXY'] = '127.0.0.1'
 
 loopback_interface = {
     'interface': 'lo0',
-    'addresses': [{'ips': ['127.0.0.1'],'family': 'AF_INET'}]
+    'addresses': [{'ips': ['127.0.0.1'], 'family': 'AF_INET'}]
 }
 
 

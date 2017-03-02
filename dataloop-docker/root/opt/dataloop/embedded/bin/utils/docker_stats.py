@@ -1,58 +1,66 @@
 import logging
-import cgroups
+import cgroups_util
 import time
 
 logger = logging.getLogger('DOCKERSTATS')
 
-RATE_INTERVAL = 5
 
-
-def get_metrics(rootfs, containers):
+def get_metrics(rootfs, interval, containers):
     metrics = {}
-    mountpoints = cgroups.get_mountpoints(rootfs)
 
-    _get_containers_stats(rootfs, mountpoints, containers, "prev_stats")
-    time.sleep(RATE_INTERVAL)
-    _get_containers_stats(rootfs, mountpoints, containers, "now_stats")
+    mountpoints = cgroups_util.find_mountpoints(rootfs)
+    _add_containers_cgroups(rootfs, mountpoints, containers)
+
+    _add_containers_stats(rootfs, containers, "prev_stats")
+    time.sleep(interval)
+    _add_containers_stats(rootfs, containers, "now_stats")
 
     for container in containers:
-        container_metrics = _get_container_metrics(container)
+        finger = container.get("finger")
+        now_stats = container.get("now_stats")
+        prev_stats = container.get("prev_stats")
+
+        container_metrics = _get_container_metrics(finger, now_stats, prev_stats, interval)
         metrics.update(container_metrics)
 
     return metrics
 
 
-def _get_containers_stats(rootfs, mountpoints, containers, key):
+def _add_containers_cgroups(rootfs, mountpoints, containers):
     for container in containers:
-        stats = _get_container_stats(rootfs, mountpoints, container)
-        setattr(container, key, stats)
+        pid = container.get("pid")
+        cgroups = cgroups_util.find_container_cgroups(rootfs, mountpoints, pid)
+        container["cgroups"] = cgroups
 
 
-def _get_container_stats(rootfs, mountpoints, container):
-    container_cgroups = cgroups.find_container_cgroups(rootfs, mountpoints, container)
+def _add_containers_stats(rootfs, containers, key):
+    for container in containers:
+        stats = _get_container_stats(rootfs, container)
+        container[key] = stats
+
+
+def _get_container_stats(rootfs, container):
+    cgroups = container.get("cgroups")
+    pid = container.get("pid")
+
     stats = {
-        "net":      cgroups.get_net_stats(rootfs, container),
-        "blkio":    cgroups.get_blkio_stats(container_cgroups["blkio"]),
-        "cpuacct":  cgroups.get_cpu_stats(rootfs, container_cgroups["cpuacct"]),
-        "memory":   cgroups.get_memory_stats(rootfs, container_cgroups["memory"]),
+        "network": cgroups_util.get_net_stats(rootfs, pid),
+        "disk": cgroups_util.get_blkio_stats(cgroups["blkio"], pid),
+        "cpu": cgroups_util.get_cpu_stats(rootfs, cgroups["cpuacct"], pid),
+        "memory": cgroups_util.get_memory_stats(rootfs, cgroups["memory"], pid),
     }
 
     return stats
 
 
-def _get_container_metrics(container):
-    base_path = container.finger + '.base'
-    metrics = {
-        base_path + '.count': 1
-    }
+def _get_container_metrics(finger, now_stats, prev_stats, interval):
+    base_path = finger + '.base'
+    metrics = {base_path + '.count': 1}
 
-    now_stats = container.now_stats
-    prev_stats = container.prev_stats
-
-    metrics.update(_get_disk_metrics(base_path, now_stats.get('blkio'), prev_stats.get('blkio')))
-    metrics.update(_get_cpu_metrics(base_path, now_stats.get('cpuacct'), prev_stats.get('cpuacct')))
-    metrics.update(_get_memory_metrics(base_path, now_stats.get('memory')))
-    metrics.update(_get_network_metrics(base_path, now_stats.get('net'), prev_stats.get('net')))
+    metrics.update(_get_disk_metrics(base_path, now_stats.get("disk"), prev_stats.get("disk"), interval))
+    metrics.update(_get_cpu_metrics(base_path, now_stats.get("cpu"), prev_stats.get("cpu"), interval))
+    metrics.update(_get_memory_metrics(base_path, now_stats.get("memory")))
+    metrics.update(_get_network_metrics(base_path, now_stats.get("network"), prev_stats.get("network"), interval))
 
     return metrics
 
@@ -61,7 +69,8 @@ def _get_container_metrics(container):
 disk metrics
 """
 
-def _get_disk_metrics(base_path, now_stats, prev_stats):
+
+def _get_disk_metrics(base_path, now_stats, prev_stats, interval):
     disk_path = base_path + '.disk'
     metrics = {}
 
@@ -70,7 +79,7 @@ def _get_disk_metrics(base_path, now_stats, prev_stats):
         per_sec_path = path + '_per_sec'
 
         metrics[path] = value
-        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / RATE_INTERVAL
+        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / interval
 
     return metrics
 
@@ -80,7 +89,7 @@ cpu metrics
 """
 
 
-def _get_cpu_metrics(base_path, now_stats, prev_stats):
+def _get_cpu_metrics(base_path, now_stats, prev_stats, interval):
     cpu_path = base_path + '.cpu'
     num_cores = now_stats.get('cores')
 
@@ -88,21 +97,21 @@ def _get_cpu_metrics(base_path, now_stats, prev_stats):
     total_delta = now_stats.get('total') - prev_stats.get('total')
 
     if total_delta > 0:
-        total_delta_per_sec = float(total_delta) / RATE_INTERVAL
+        total_delta_per_sec = float(total_delta) / interval
 
         usage_delta = now_stats.get('usage') - prev_stats.get('usage')
         if usage_delta > 0:
-            usage_delta_per_sec = float(usage_delta) / RATE_INTERVAL
+            usage_delta_per_sec = float(usage_delta) / interval
             usage_percent = usage_delta_per_sec / total_delta_per_sec * num_cores * 100
 
         system_delta = now_stats.get("system") - prev_stats.get('system')
         if system_delta > 0:
-            system_delta_per_sec = float(system_delta) / RATE_INTERVAL
+            system_delta_per_sec = float(system_delta) / interval
             system_percent = system_delta_per_sec / total_delta_per_sec * num_cores * 100
 
         user_delta = now_stats.get('user') - prev_stats.get('user')
         if user_delta > 0:
-            user_delta_per_sec = float(user_delta) / RATE_INTERVAL
+            user_delta_per_sec = float(user_delta) / interval
             user_percent = user_delta_per_sec / total_delta_per_sec * num_cores * 100
 
     metrics = {
@@ -119,8 +128,9 @@ def _get_cpu_metrics(base_path, now_stats, prev_stats):
 memory metrics
 """
 
+
 def _get_memory_metrics(base_path, stats):
-    memory_path = base_path + '.memory'
+    memory_path = base_path + '.vmem'
 
     metrics = {}
     for metric, value in stats.iteritems():
@@ -137,7 +147,8 @@ def _get_memory_metrics(base_path, stats):
 network metrics
 """
 
-def _get_network_metrics(base_path, now_stats, prev_stats):
+
+def _get_network_metrics(base_path, now_stats, prev_stats, interval):
     network_path = base_path + '.network'
     metrics = {}
 
@@ -146,7 +157,7 @@ def _get_network_metrics(base_path, now_stats, prev_stats):
         per_sec_path = path + '_per_sec'
 
         metrics[path] = value
-        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / RATE_INTERVAL
+        metrics[per_sec_path] = (float(value) - float(prev_stats.get(metric))) / interval
 
         if metric == 'bytes_recv':
             metrics[base_path + '.net_download'] = metrics[per_sec_path] / 1024
