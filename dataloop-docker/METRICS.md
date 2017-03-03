@@ -1,8 +1,6 @@
 ### Docker Metrics
 ==================
 
-Note: It looks like some linux distributions don't enable metrics cgroups by default. From [docker docs](https://docs.docker.com/engine/admin/runmetrics/#/memory-metrics-memorystat): "To enable it, all you have to do is to add some kernel command-line parameters: cgroup_enable=memory swapaccount=1."
-
 
 #### base
 

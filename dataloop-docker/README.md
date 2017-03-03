@@ -6,41 +6,43 @@ running container. Depending on which OS you are running on your Docker hosts yo
 
 This container builds on [dataloop/agent-base](https://github.com/dataloop/docker-alpine/tree/master/agent-base) where further options to pass to the container can be found.
 
+The list of metrics returned for each running containers can be found [here](https://github.com/dataloop/docker-alpine/tree/master/dataloop-docker/METRICS.md).
+
 ## Most Linuxes
 
 ```
 DATALOOP_AGENT_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 DATALOOP_NAME=docker_container_name
-docker run -d -e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
+
+docker run -d \
+-e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
 -e "DATALOOP_NAME=${DATALOOP_NAME}" \
--p 8000:8000 \
---volume=/var/run/docker.sock:/var/run/docker.sock:rw \
---volume=/sys:/sys:ro \
---volume=/var/lib/docker/:/var/lib/docker:ro \
+-v /var/run/docker.sock:/var/run/docker.sock:ro \
+-v /proc:/rootfs/proc:ro \
+-v /sys/fs/cgroup:/rootfs/sys/fs/cgroup:ro \
 dataloop/dataloop-docker:latest
 ```
 
 ## Amazon Linux
 
-If using an Amazon Linux AMI you will need to also mount the /cgroup directory into the container.
+If using an Amazon Linux AMI you will need to change the /cgroup volume mount location
 
 ```
 DATALOOP_AGENT_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 DATALOOP_NAME=docker_container_name
-docker run -d -e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
+
+docker run -d \
+-e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
 -e "DATALOOP_NAME=${DATALOOP_NAME}" \
--p 8000:8000 \
---volume=/:/rootfs:ro \
---volume=/var/run:/var/run:rw \
---volume=/sys:/sys:ro \
---volume=/var/lib/docker/:/var/lib/docker:ro \
---volume=/cgroup:/sys/fs/cgroup:ro \
+-v /var/run/docker.sock:/var/run/docker.sock:ro \
+-v /proc:/rootfs/proc:ro \
+-v /cgroup:/rootfs/sys/fs/cgroup:ro \
 dataloop/dataloop-docker:latest
 ```
 
 ## RHEL and CentOS
 
-RHEL and CentOS lock down their containers a bit more. cAdvisor needs access to the Docker daemon through its socket. This requires --privileged=true in RHEL and CentOS.
+RHEL and CentOS lock down their containers a bit more. We need access to the Docker daemon through its socket. This requires --privileged=true in RHEL and CentOS.
 
 ```
 DATALOOP_AGENT_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -59,9 +61,7 @@ dataloop/dataloop-docker:latest
 
 # Troubleshooting
 
-If you see 0 for base.memory in your containers you will need to enable memory accounting in cgroups. To do that on Ubuntu update the kernel line in Grub:
-
-https://docs.docker.com/engine/installation/linux/ubuntulinux/#adjust-memory-and-swap-accounting
+If you dont see any memory metrics in your containers you will need to enable memory accounting in cgroups. To do that just add some kernel command-line parameters: cgroup_enable=memory swapaccount=1. More info from the [docker documentation](https://docs.docker.com/engine/admin/runmetrics/#/memory-metrics-memorystat).
 
 Proxy
 =====
@@ -82,13 +82,9 @@ A set of independent foreground processes that log to standard out that can be r
 
 All state is stored in Dataloop so these scripts can be run in ephemeral containers with no local storage.
 
-- discover.py
+- agents.py
 
-Polls Docker api and Dataloop. Ensures containers match agents via register and deregister API's.
-
-- tag.py
-
-Tags agents in Dataloop with their Docker Tags by matching container ID to agent name.
+Polls Docker api and Dataloop. Ensures containers match agents via register and deregister API's. Tag containers with relevant info taken from various places. Send a ping metric for each running containers.
 
 - metrics.py
 
