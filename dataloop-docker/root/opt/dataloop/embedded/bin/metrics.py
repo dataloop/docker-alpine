@@ -27,15 +27,17 @@ def format_container(container):
 
 
 def publish_metrics(ctx, metrics):
-    sock = socket.socket()
-    sock.connect((ctx["graphite_host"], ctx["graphite_port"]))
+    message = ""
 
     for path, value in metrics.iteritems():
         if isinstance(value, int) or isinstance(value, float):
-            message = "%s %s\n" % (path, value)
-            sock.sendall(message)
+            message += "%s %s\n" % (path, value)
 
-    sock.close()
+    if message:
+        sock = socket.socket()
+        sock.connect((ctx["graphite_host"], ctx["graphite_port"]))
+        sock.sendall(message)
+        sock.close()
 
 
 def main(argv):
