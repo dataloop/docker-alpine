@@ -23,7 +23,7 @@ docker run -d \
 dataloop/dataloop-docker:latest
 ```
 
-## Amazon Linux
+## Amazon Linux (ECS)
 
 If using an Amazon Linux AMI you will need to change the /cgroup volume mount location
 
@@ -38,9 +38,16 @@ docker run -d \
 -v /proc:/rootfs/proc:ro \
 -v /cgroup:/rootfs/sys/fs/cgroup:ro \
 dataloop/dataloop-docker:latest
+
 ```
+## Support Versions
+
+This container has been tested to run on Docker >= 1.9.1  
+
 
 # Troubleshooting
+
+Please contact us on https://slack.outlyer.com or support@outlyer.com for help.
 
 If you dont see any memory metrics in your containers you will need to enable memory accounting in cgroups. To do that just add some kernel command-line parameters: cgroup_enable=memory swapaccount=1. More info from the [docker documentation](https://docs.docker.com/engine/admin/runmetrics/#/memory-metrics-memorystat).
 
