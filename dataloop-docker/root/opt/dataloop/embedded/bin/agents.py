@@ -3,6 +3,8 @@ import logging
 import sys
 import time
 import os
+import requests
+
 from utils import api, docker_util, logger_util
 
 logger = logging.getLogger('AGENTS')
@@ -11,7 +13,7 @@ os.environ['NO_PROXY'] = '127.0.0.1'
 
 loopback_interface = {
     'interface': 'lo0',
-    'addresses': [{'ips': ['127.0.0.1'],'family': 'AF_INET'}]
+    'addresses': [{'ips': ['127.0.0.1'], 'family': 'AF_INET'}]
 }
 
 
@@ -20,30 +22,39 @@ def sync(ctx):
 
     try:
         containers = docker_util.list_containers()
-        system_uuid = docker_util.get_system_uuid(ctx)
+        ctx['system_uuid'] = docker_util.get_system_uuid(ctx)
+        ctx['host_finger'] = get_host_finger()
 
-        ping_containers(ctx, containers, system_uuid)
+        ping_containers(ctx, containers)
         tag_containers(ctx, containers)
-        deregister_dead_containers(ctx, containers, system_uuid)
+        deregister_dead_containers(ctx, containers)
 
     except Exception as ex:
         logger.error("agent sync failed: %s" % ex, exc_info=True)
 
 
-def ping_containers(ctx, containers, system_uuid):
+def get_host_finger():
+    finger = requests.get("http://localhost:8000").text
+    # this endpoint returns the fingerprint with a newline, so strip whitespace
+    return finger.strip()
+
+
+def ping_containers(ctx, containers):
 
     def create_agent(container):
         return {
             'finger': docker_util.get_hash(container),
             'name': container.name,
-            'mac': system_uuid,
+            'mac': ctx['system_uuid'],
             'hostname': docker_util.get_container_hostname(container),
             'os_name': 'docker',
             'os_version': '',
             'processes': docker_util.get_processes(container),
-            'container': '001',
             'interfaces': _get_agent_interface(container),
-            'mode': 'SOLO'
+            'mode': 'SOLO',
+            'interpreter': '/usr/bin/python',
+            'container_id': container.id,
+            'parent': ctx['host_finger']
         }
 
     agents = map(create_agent, containers)
@@ -55,15 +66,15 @@ def tag_containers(ctx, containers):
     def create_tags(container):
         return {
             'finger': docker_util.get_hash(container),
-            'tags': _get_agent_tags(container)
+            'tags': _get_agent_tags(ctx, container)
         }
 
     agents = map(create_tags, containers)
     api.tag_agents(ctx, agents)
 
 
-def deregister_dead_containers(ctx, containers, system_uuid):
-    agents = api.list_agents(ctx, system_uuid)
+def deregister_dead_containers(ctx, containers):
+    agents = api.list_agents(ctx, ctx['system_uuid'])
     agent_ids = set(map(lambda a: a['id'], agents))
 
     container_hashes = docker_util.get_container_hashes(containers)
@@ -85,9 +96,11 @@ def _get_agent_interface(container):
     return interfaces
 
 
-def _get_agent_tags(container):
+def _get_agent_tags(ctx, container):
     tags = ["all", "docker"]
 
+    #tags.append("container:%s" % docker_util.get_container_hostname(container))
+    #tags.append("parent:%s" % ctx['host_finger'])
     tags.append(docker_util.get_image(container))
     tags.append(docker_util.get_host_hostname())
     tags.append(docker_util.get_container_hostname(container))

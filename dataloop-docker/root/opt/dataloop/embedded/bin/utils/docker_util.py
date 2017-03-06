@@ -6,9 +6,9 @@ import uuid
 import os
 import re
 
-logger = logging.getLogger('DOCKERUTIL')
+logger = logging.getLogger("DOCKERUTIL")
 
-UUID_HASH = uuid.UUID('12345678123456781234567812345678')
+UUID_HASH = uuid.UUID("12345678123456781234567812345678")
 
 system_uuid_paths = [
     "/sys/class/dmi/id/product_uuid",
@@ -18,28 +18,27 @@ system_uuid_paths = [
 ]
 
 # will catch (numbers | uuid and hashed strings | garbage | list and dict)
-label_regex = '^(\d+)|([a-f0-9-]{32,})|(true|false|null|nil|none|undefined)|.*[\[\]\{\}].*$'
+label_regex = "^(\d+)|([a-f0-9-]{32,})|(true|false|null|nil|none|undefined)|.*[\[\]\{\}].*$"
 label_pattern = re.compile(label_regex)
 
-DOCKER_VERSION = 'auto'
-DOCKER_TIMEOUT = 5
+is_k8s = "KUBERNETES_PORT" in os.environ
 
 # connect to the docker server
 docker_client = docker.from_env(
     assert_hostname=False,
-    version='auto',
+    version="auto",
     timeout=5,
 )
 
 
 def list_containers():
-    '''return a list of running containers, excluding the dataloop-docker one'''
+    """Return a list of running containers."""
     containers = docker_client.containers.list()
 
-    def filter_host_container(container):
-        return container.id[:12] != socket.gethostname()
+    if is_k8s:
+        return filter(_filter_kube_container, containers)
 
-    return filter(filter_host_container, containers)
+    return filter(_filter_host_container, containers)
 
 
 def get_container_hashes(containers):
@@ -47,20 +46,24 @@ def get_container_hashes(containers):
 
 
 def get_hash(container):
-    '''the container hash returned here is the dataloop agent finger id'''
+    """The container hash returned here is the dataloop agent finger id."""
     return _hash_id("/docker/" + container.id)
 
 
 def get_image(container):
-    return container.attrs.get('Config', {}).get('Image', "")
+    return container.attrs.get("Config", {}).get("Image", "") or ""
+
+
+def get_pid(container):
+    return container.attrs.get("State", {}).get("Pid", "") or ""
 
 
 def get_processes(container):
-    '''get and group/count the processes running inside the container'''
-    docker_processes = container.top().get("Processes", [])
+    """Get and group/count the processes running inside the container."""
+    docker_processes = container.top().get("Processes", []) or []
 
     def extract_docker_processes(process):
-        return process[len(process) -1]
+        return process[len(process) - 1]
 
     processes = map(extract_docker_processes, docker_processes)
 
@@ -74,8 +77,8 @@ def get_processes(container):
 
 
 def get_ips(container):
-    '''return a list of ip addresses of all the container networks'''
-    container_networks = container.attrs.get("NetworkSettings", {}).get("Networks", {})
+    """Return a list of ip addresses of all the container networks."""
+    container_networks = container.attrs.get("NetworkSettings", {}).get("Networks", {}) or {}
 
     def map_container_network(network):
         return network.get("IPAddress", None)
@@ -84,25 +87,26 @@ def get_ips(container):
 
 
 def get_env_variables(container):
-    '''if container env variables follow ENV=VALUE pattern, return them as a dict'''
+    """If container env variables follow ENV=VALUE pattern, return them as a dict."""
     env_variables = {}
 
     for env_var in container.attrs["Config"]["Env"]:
         try:
-            key, value = env_var.split('=', 1)
+            key, value = env_var.split("=", 1)
             env_variables[key] = value
         except:
             continue
 
     return env_variables
 
+
 def get_labels(container):
 
     def filter_labels(label):
         return not label_pattern.match(label.lower())
 
-    labels = container.attrs.get('Config', {}).get('Labels', {}).values()
-    return filter(filter_labels, labels)
+    labels = container.attrs.get("Config", {}).get("Labels", {}) or {}
+    return filter(filter_labels, labels.values())
 
 
 def get_container_hostname(container):
@@ -110,11 +114,11 @@ def get_container_hostname(container):
 
 
 def get_host_hostname():
-    '''return the `Name` from `docker info`'''
+    """Return the `Name` from `docker info`."""
     try:
         return docker_client.info().get("Name")
     except Exception as e:
-        log.warn("Unable to retrieve hostname using docker API, %s", str(e))
+        logger.warn("Unable to retrieve hostname using docker API, %s", str(e))
         return ""
 
 
@@ -128,7 +132,7 @@ def get_system_uuid(ctx):
         if uuid:
             return uuid
 
-    if ctx['debug']:
+    if ctx["debug"]:
         return socket.gethostname()
 
     raise OSError("Cannot read system_uuid")
@@ -136,3 +140,22 @@ def get_system_uuid(ctx):
 
 def _hash_id(id):
     return str(uuid.uuid5(UUID_HASH, id))
+
+
+# exclude the dataloop-docker container
+def _filter_host_container(container):
+    return container.id[:12] != socket.gethostname()
+
+
+# exclude "kube-system" and paused containers
+def _filter_kube_container(container):
+    config = container.attrs.get("Config", {}) or {}
+
+    image = config.get("Image", "") or ""
+    labels = config.get("Labels", {}) or {}
+
+    is_kube_system = labels["io.kubernetes.pod.namespace"] == "kube-system"
+    is_paused = re.search("google_containers/pause", image)
+    is_host = labels["io.kubernetes.pod.name"] == socket.gethostname()
+
+    return not is_kube_system and not is_paused and not is_host

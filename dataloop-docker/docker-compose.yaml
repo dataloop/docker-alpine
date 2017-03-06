@@ -1,0 +1,18 @@
+---
+version: '2'
+services:
+  dataloop-docker:
+    image: dataloop/dataloop-docker:latest
+    ports:
+      - 8000:8000 # This serves the agent's fingerprint over http
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /sys/fs/cgroup:/rootfs/sys/fs/cgroup:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /proc:/rootfs/proc:ro
+    environment:
+      - DATALOOP_NAME=dataloop-docker
+      - DATALOOP_AGENT_KEY=<your dataloop agent key>
+      # - DATALOOP_FINGERPRINT=  # associate with known agent fingerprint
+      # - DOCKER_DEBUG=on
+      # - DATALOOP_TAGS='custom,startup,tags'
