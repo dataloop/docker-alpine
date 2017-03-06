@@ -19,8 +19,8 @@ Version releases are in the format:
 
 * extend from dataloop\agent-base on Alpine Linux
 * remove cadvisor
-* collect metrics from docker api
-* merge discovery, tagging to one service
+* collect metrics directly from cgroups files
+* merge discovery, presence and tagging to one service
 * improved logging and debug flag
 * all logs go to `docker logs`
 
