@@ -15,7 +15,7 @@ Version releases are in the format:
 
 --- 
 
-## 17.03-1
+## 2017.03-1
 
 **This release changes the base metrics paths. See the METRICS.md file for OS level base metrics returned by this container. Please update your Docker Pack**
 
