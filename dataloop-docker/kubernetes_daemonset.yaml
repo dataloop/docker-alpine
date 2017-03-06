@@ -1,0 +1,52 @@
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: dataloop-docker
+  labels:
+    tier: monitoring
+    app: dataloop-docker
+    version: v1
+spec:
+  template:
+    metadata:
+      labels:
+        name: dataloop-docker
+    spec:
+      # Filter to specific nodes:
+      # nodeSelector:
+      #  app: newrelic
+      hostPID: true
+      hostIPC: true
+      hostNetwork: true
+      containers:
+        - resources:
+            requests:
+              cpu: 0.15
+          securityContext:
+            privileged: true
+          env:
+            - name: DATALOOP_AGENT_KEY
+              value: <your dataloop agent key>
+          image: dataloop/dataloop-docker:latest
+          imagePullPolicy: Always
+          name: dataloop-docker
+          volumeMounts:
+          - mountPath: /var/run/docker.sock
+            name: docker-socket
+          - mountPath: /rootfs/proc
+            name: proc
+            readOnly: true
+          - mountPath: /rootfs/sys/fs/cgroup
+            name: sysfscgroup
+            readOnly: true
+      volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+      - name: sysfscgroup
+        hostPath:
+            path: /sys/fs/cgroup
+      - name: proc
+        hostPath:
+            path: /proc
