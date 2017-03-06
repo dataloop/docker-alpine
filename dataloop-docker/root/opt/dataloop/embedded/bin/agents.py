@@ -51,7 +51,7 @@ def ping_containers(ctx, containers):
             'os_version': '',
             'processes': docker_util.get_processes(container),
             'interfaces': _get_agent_interface(container),
-            'mode': 'DEFAULT',
+            'mode': 'SOLO',
             'interpreter': '/usr/bin/python',
             'container_id': container.id,
             'parent': ctx['host_finger']
