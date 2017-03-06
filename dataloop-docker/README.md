@@ -40,25 +40,6 @@ docker run -d \
 dataloop/dataloop-docker:latest
 ```
 
-## RHEL and CentOS
-
-RHEL and CentOS lock down their containers a bit more. We need access to the Docker daemon through its socket. This requires --privileged=true in RHEL and CentOS.
-
-```
-DATALOOP_AGENT_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DATALOOP_NAME=docker_container_name
-docker run -d -e "DATALOOP_AGENT_KEY=${DATALOOP_AGENT_KEY}" \
--e "DATALOOP_NAME=${DATALOOP_NAME}" \
--p 8000:8000 \
---privileged=true \
---volume=/:/rootfs:ro \
---volume=/var/run:/var/run:rw \
---volume=/sys:/sys:ro \
---volume=/var/lib/docker/:/var/lib/docker:ro \
---volume=/cgroup:/sys/fs/cgroup:ro \
-dataloop/dataloop-docker:latest
-```
-
 # Troubleshooting
 
 If you dont see any memory metrics in your containers you will need to enable memory accounting in cgroups. To do that just add some kernel command-line parameters: cgroup_enable=memory swapaccount=1. More info from the [docker documentation](https://docs.docker.com/engine/admin/runmetrics/#/memory-metrics-memorystat).
