@@ -50,16 +50,19 @@ def find_mountpoints(rootfs):
     with open(mount_path) as fp:
         mounts = map(lambda x: x.split(), fp.read().splitlines())
 
-    def filter_mountpoint(mount):
-        return mount[2] == "cgroup" and \
-            mount[1].startswith(rootfs) and \
-            os.path.exists(mount[1])
+    cgroup_mounts = filter(lambda x: x[2] == "cgroup" and os.path.exists(x[1]), mounts)
 
     # only keep the host cgroups mounts
-    cgroup_mounts = filter(filter_mountpoint, mounts)
+    rootfs_mounts = filter(lambda x: x[1].startswith(rootfs), cgroup_mounts)
+
+    # old cgroup style, add the rootfs path manually
+    if not(rootfs_mounts):
+        for mount in cgroup_mounts:
+            mount[1] = os.path.join(rootfs, mount[1][1:])
+            rootfs_mounts.append(mount)
 
     # find the subsystems we are interested in
-    for _, mountpoint, _, opts, _, _ in cgroup_mounts:
+    for _, mountpoint, _, opts, _, _ in rootfs_mounts:
         for opt in opts.split(','):
             if opt in cgroup_subsystems:
                 mountpoints[opt] = mountpoint
@@ -170,16 +173,16 @@ def _format_memory_stats(stats, host_memory):
     # if the container has no memory limit, use the host memory instead
     mem_limit = stats.get("hierarchical_memory_limit")
     if mem_limit > host_memory.get("total", 0):
-        mem_limit = host_memory.get("total")
+        mem_limit = host_memory.get("total", 0)
 
     swap_limit = stats.get("hierarchical_memsw_limit")
     if swap_limit > host_memory.get("swap", 0):
-        swap_limit = host_memory.get("swap")
+        swap_limit = host_memory.get("swap", 0)
 
     mem_used = stats.get('rss') + stats.get('cache') + stats.get('swap')
 
-    mem_percent = round(float(mem_used) / float(mem_limit) * 100.0, 2)
-    swap_percent = round(float(stats.get("swap")) / float(swap_limit) * 100.0, 2)
+    mem_percent = round(float(mem_used) / float(mem_limit) * 100.0, 2) if mem_limit else None
+    swap_percent = round(float(stats.get("swap")) / float(swap_limit) * 100.0, 2) if swap_limit else None
 
     stats = {
         "used": mem_used,
