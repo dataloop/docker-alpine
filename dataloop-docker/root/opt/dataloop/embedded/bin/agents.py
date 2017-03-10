@@ -51,7 +51,7 @@ def ping_containers(ctx, containers):
             'os_version': '',
             'processes': docker_util.get_processes(container),
             'interfaces': _get_agent_interface(container),
-            'mode': 'SOLO',
+            'mode': 'DEFAULT',
             'interpreter': '/usr/bin/python',
             'container_id': container.id,
             'parent': ctx['host_finger']
@@ -99,8 +99,8 @@ def _get_agent_interface(container):
 def _get_agent_tags(ctx, container):
     tags = ["all", "docker"]
 
-    #tags.append("container:%s" % docker_util.get_container_hostname(container))
-    #tags.append("parent:%s" % ctx['host_finger'])
+    tags.append("container:%s" % docker_util.get_container_hostname(container))
+    tags.append("parent:%s" % ctx['host_finger'])
     tags.append(docker_util.get_image(container))
     tags.append(docker_util.get_host_hostname())
     tags.append(docker_util.get_container_hostname(container))
