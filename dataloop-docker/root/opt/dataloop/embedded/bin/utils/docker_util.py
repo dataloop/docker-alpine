@@ -154,8 +154,8 @@ def _filter_kube_container(container):
     image = config.get("Image", "") or ""
     labels = config.get("Labels", {}) or {}
 
-    is_kube_system = labels["io.kubernetes.pod.namespace"] == "kube-system"
+    is_kube_system = labels.get("io.kubernetes.pod.namespace", "") == "kube-system"
     is_paused = re.search("google_containers/pause", image)
-    is_host = labels["io.kubernetes.pod.name"] == socket.gethostname()
+    is_host = labels.get("io.kubernetes.pod.name", "") == socket.gethostname()
 
     return not is_kube_system and not is_paused and not is_host
