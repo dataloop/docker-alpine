@@ -22,8 +22,8 @@ def sync(ctx):
 
     try:
         containers = docker_util.list_containers()
-        ctx['system_uuid'] = docker_util.get_system_uuid(ctx)
         ctx['host_finger'] = get_host_finger()
+        ctx['mac'] = docker_util.get_system_uuid() or ctx['host_finger']
 
         ping_containers(ctx, containers)
         tag_containers(ctx, containers)
@@ -45,7 +45,7 @@ def ping_containers(ctx, containers):
         return {
             'finger': docker_util.get_hash(container),
             'name': container.name,
-            'mac': ctx['system_uuid'],
+            'mac': ctx['mac'],
             'hostname': docker_util.get_container_hostname(container),
             'os_name': 'docker',
             'os_version': '',
@@ -74,7 +74,7 @@ def tag_containers(ctx, containers):
 
 
 def deregister_dead_containers(ctx, containers):
-    agents = api.list_agents(ctx, ctx['system_uuid'])
+    agents = api.list_agents(ctx, ctx['mac'])
     agent_ids = set(map(lambda a: a['id'], agents))
 
     container_hashes = docker_util.get_container_hashes(containers)
