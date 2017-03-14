@@ -22,8 +22,8 @@ def sync(ctx):
 
     try:
         containers = docker_util.list_containers()
-        ctx['system_uuid'] = docker_util.get_system_uuid(ctx)
         ctx['host_finger'] = get_host_finger()
+        ctx['system_uuid'] = docker_util.get_system_uuid() or ctx['host_finger']
 
         ping_containers(ctx, containers)
         tag_containers(ctx, containers)

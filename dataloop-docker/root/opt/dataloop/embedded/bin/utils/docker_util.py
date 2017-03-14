@@ -122,7 +122,7 @@ def get_host_hostname():
         return ""
 
 
-def get_system_uuid(ctx):
+def get_system_uuid():
     for uuid_path in system_uuid_paths:
         if not os.path.isfile(uuid_path):
             continue
@@ -131,11 +131,6 @@ def get_system_uuid(ctx):
         uuid = uuid_file.readline().strip()
         if uuid:
             return uuid
-
-    if ctx["debug"]:
-        return socket.gethostname()
-
-    raise OSError("Cannot read system_uuid")
 
 
 def _hash_id(id):
