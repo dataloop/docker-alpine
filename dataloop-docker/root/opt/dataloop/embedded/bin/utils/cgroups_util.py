@@ -171,23 +171,23 @@ def _parse_memory_stat_file(cgroup_path):
 
 def _format_memory_stats(stats, host_memory):
     # if the container has no memory limit, use the host memory instead
-    mem_limit = stats.get("hierarchical_memory_limit")
+    mem_limit = stats["hierarchical_memory_limit"]
     if mem_limit > host_memory.get("total", 0):
         mem_limit = host_memory.get("total", 0)
 
-    swap_limit = stats.get("hierarchical_memsw_limit")
+    swap_limit = stats["hierarchical_memsw_limit"]
     if swap_limit > host_memory.get("swap", 0):
         swap_limit = host_memory.get("swap", 0)
 
-    mem_used = stats.get('rss') + stats.get('cache') + stats.get('swap')
+    mem_used = stats['rss'] + stats['cache'] + stats['swap']
 
     mem_percent = round(float(mem_used) / float(mem_limit) * 100.0, 2) if mem_limit else None
-    swap_percent = round(float(stats.get("swap")) / float(swap_limit) * 100.0, 2) if swap_limit else None
+    swap_percent = round(float(stats['swap']) / float(swap_limit) * 100.0, 2) if swap_limit else None
 
     stats = {
         "used": mem_used,
         "total": mem_limit,
-        "available": mem_limit - stats.get('rss'),
+        "available": mem_limit - stats['rss'],
         "memory": mem_percent,
         "swap": swap_percent,
         "cached": stats.get("cache"),
