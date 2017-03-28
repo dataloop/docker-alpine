@@ -3,6 +3,9 @@
 ## Set to yes to disable RPC and run plugins from local plugin source
 solo: no
 
+## run built-in container discovery
+docker: no
+
 ## Set to yes to create lots of logs
 debug: <<DEBUG>>
 
