@@ -1,4 +1,4 @@
-FROM dataloop/agent-base:v1.3.28-1
+FROM dataloop/agent-base:v1.3.33-1
 
 ENV GLIBC_VERSION "2.23-r3"
 
