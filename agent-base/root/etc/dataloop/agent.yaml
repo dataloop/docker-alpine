@@ -3,6 +3,8 @@
 ## Set to yes to disable RPC and run plugins from local plugin source
 solo: no
 
+docker: yes
+
 ## Set to yes to create lots of logs
 debug: <<DEBUG>>
 
