@@ -10,7 +10,7 @@ RUN apk add py-mysqldb py-psycopg2 libffi-dev openssl-dev
 ADD agent/ /opt/dataloop/agent
 
 # install pip requirements and make necessary dirs
-RUN pip install -r /opt/dataloop/agent/requirements.txt && mkdir -p /etc/dataloop /var/log/dataloop /opt/dataloop
+RUN cd /opt/dataloop/agent/ && pip install -r /opt/dataloop/agent/requirements.txt && mkdir -p /etc/dataloop /var/log/dataloop /opt/dataloop
 
 RUN sed -i '/MySQL-python/d' /opt/dataloop/agent/plugin_requirements.txt \
     && sed -i '/psycopg2/d' /opt/dataloop/agent/plugin_requirements.txt \
