@@ -13,16 +13,11 @@ spec:
       labels:
         name: dataloop-docker
     spec:
-      # Filter to specific nodes:
-      # nodeSelector:
-      #  app: newrelic
       hostPID: true
       hostIPC: true
       hostNetwork: true
       containers:
         - resources:
-            requests:
-              cpu: 0.15
           securityContext:
             privileged: true
           env:
