@@ -5,6 +5,8 @@ solo: no
 
 docker: yes
 
+rootfs: "/rootfs"
+
 ## Set to yes to create lots of logs
 debug: <<DEBUG>>
 
