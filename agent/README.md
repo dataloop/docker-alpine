@@ -2,8 +2,6 @@
 
 This container contains a Dataloop (Outlyer) agent. It will create virtual agents in Outlyer for each running container. Depending on which OS you are running on your Docker hosts you may need to add different run options.
 
-This container builds on [dataloop/agent-base](https://github.com/dataloop/docker-alpine/tree/master/agent-base) where further options to pass to the container can be found.
-
 The list of metrics returned for each running containers can be found [here](https://github.com/dataloop/docker-alpine/tree/master/dataloop-docker/METRICS.md).
 
 ## Most Linuxes
