@@ -2,7 +2,7 @@
 
 This container contains a Dataloop (Outlyer) agent. It will create virtual agents in Outlyer for each running container. Depending on which OS you are running on your Docker hosts you may need to add different run options.
 
-The list of metrics returned for each running containers can be found [here](https://github.com/dataloop/docker-alpine/tree/master/dataloop-docker/METRICS.md).
+The list of metrics returned for each running containers can be found [here](https://github.com/dataloop/docker-alpine/tree/master/agent/METRICS.md).
 
 ## Most Linuxes
 
@@ -16,7 +16,7 @@ docker run -d \
 -v /var/run/docker.sock:/var/run/docker.sock:ro \
 -v /proc:/rootfs/proc:ro \
 -v /sys/fs/cgroup:/rootfs/sys/fs/cgroup:ro \
-dataloop/dataloop-docker:latest
+outlyer/agent:latest
 ```
 
 ## Amazon Linux (ECS)
@@ -33,7 +33,7 @@ docker run -d \
 -v /var/run/docker.sock:/var/run/docker.sock:ro \
 -v /proc:/rootfs/proc:ro \
 -v /cgroup:/rootfs/sys/fs/cgroup:ro \
-dataloop/dataloop-docker:latest
+outlyer/agent:latest
 
 ```
 
@@ -59,7 +59,7 @@ docker run -d \
 -v /var/run/docker.sock:/var/run/docker.sock:ro \
 -v /proc:/rootfs/proc:ro \
 -v /cgroup:/rootfs/sys/fs/cgroup:ro \
-dataloop/dataloop-docker:latest
+outlyer/agent:latest
 
 ```
 
