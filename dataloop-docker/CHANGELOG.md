@@ -2,6 +2,15 @@
 
 All noteable changes to this project will be documented in this file
 
+
+---
+
+## DEPRECATED
+
+* ```dataloop\dataloop-docker` becomes `outlyer\agent`
+
+---
+
 Version releases are in the format:  
 
 ```
@@ -10,7 +19,13 @@ Version releases are in the format:
 
 ---
 
-## Unreleased
+## 2017.4-1
+
+**Please Update the Base pack to 1.10+ to fix an issue with devicemapper mountpoints inside containers**
+
+* kubernetes: fix label checking on filtering
+* fix memory collection
+* merged into agent base -metrics collection and discovery embedded in agent code
 
 
 --- 
