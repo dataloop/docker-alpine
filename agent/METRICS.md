@@ -59,4 +59,6 @@
 
 - cores
 - system
+- usage
+- total
 - user
