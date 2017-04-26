@@ -5,6 +5,12 @@ All noteable changes to this project will be documented in this file
 Version releases track the dataloop-agent semver  
 The patch version is for the number of containers built at this release level
 
+## 1.3.52-2 - 2017/04/26
+
+* enabled load_1 metrics and added base.count. 
+* added exception handling if one of the metric collection fail
+* update the containers states when their host disconnect (and/or reconnect as well). If the host becomes orange/red its containers will become orange too instead of staying green in the UI.
+
 
 ## 1.3.49-1
 
