@@ -5,14 +5,14 @@ Docker comes in with a plethora of stack/deployment options. Below is a list of 
 
 ### Storage Drivers
 
-Technology|  Storage driver| name
------------|----------------------
+Technology | Storage driver
+----|----
 OverlayFS  | overlay or overlay2
-AUFS   | aufs
-Btrfs |  btrfs
+AUFS       | aufs
+Btrfs      |  btrfs
 Device Mapper |  devicemapper
-VFS  |   vfs
-ZFS  |   zfs
+VFS        |   vfs
+ZFS        |   zfs
 
 
 ### Operating Systems
