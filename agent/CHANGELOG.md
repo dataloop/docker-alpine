@@ -5,6 +5,11 @@ All noteable changes to this project will be documented in this file
 Version releases track the dataloop-agent semver  
 The patch version is for the number of containers built at this release level
 
+## 1.3.52-2 - 2017/04/27
+
+* only log stacktrace if debug flag is on
+
+
 ## 1.3.52-2 - 2017/04/26
 
 * enabled load_1 metrics and added base.count. 
