@@ -82,11 +82,12 @@ When running the agent with the above `docker run` options, some features will b
 
 If you'd like to have host network metrics sent under your agent container (rather than your actual container's network metrics) and you cannot run your container with `--net host`, please follow these steps:
 
-    1) On your account's main overview page (https://app.outlyer.com/YOUR_ORG/YOUR_ACCOUNT/#/setup/overview), click on "Setup Monitoring";
-    2) Click on "Plugins List", then on "base.py".
-    3) On the code editor, there should be a function called `check_netio`.
-       Replace it with the one here: https://gist.github.com/alexdias/d51ef12d02d9e8f56721c48d52517f5c
-    4) Click "Save changes" to have your base plugin updated.
+    1. Mount your host's sys folder on your agent container (e.g. pass `-v /sys:/rootfs/sys` to `docker run`);
+    2. On your account's main overview page <https://app.outlyer.com/YOUR_ORG/YOUR_ACCOUNT/#/setup/overview>, click on "Setup Monitoring";
+    3. Click on "Plugins List", then on "base.py".
+    4. On the code editor, there should be a function called `check_netio`.
+       Replace it with the one here: <https://gist.github.com/alexdias/d51ef12d02d9e8f56721c48d52517f5c>
+    5. Click `Save changes` to have your base plugin updated.
 
 ## Proxy
 
