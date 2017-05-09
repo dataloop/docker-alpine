@@ -21,6 +21,3 @@ This container runs the Prometheus exporter for MySQL server metrics and an Outl
 ## mysqld_exporter
 
 This container runs the Prometheus exporter for MySQL server metrics and an Outlyer (Dataloop) agent instance to collect the metrics and send them into Outlyer.
-
-
-
