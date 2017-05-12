@@ -2,7 +2,7 @@
 version: '2'
 services:
   dataloop-docker:
-    image: dataloop/dataloop-docker:latest
+    image: outlyer/agent:latest
     ports:
       - 8000:8000 # This serves the agent's fingerprint over http
     volumes:
@@ -11,7 +11,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /proc:/rootfs/proc:ro
     environment:
-      - DATALOOP_NAME=dataloop-docker
+      - DATALOOP_NAME=outlyer-agent
       - DATALOOP_AGENT_KEY=<your dataloop agent key>
       # - DATALOOP_FINGERPRINT=  # associate with known agent fingerprint
       # - DOCKER_DEBUG=on

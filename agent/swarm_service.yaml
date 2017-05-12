@@ -2,9 +2,9 @@ version: '3.1'
 
 services:
     agent-worker:
-        image: dataloop/dataloop-docker:latest
+        image: outlyer/agent:latest
         environment:
-          - DATALOOP_AGENT_KEY=<your dataoop agent key>
+          - DATALOOP_AGENT_KEY=<your dataloop agent key>
           - DATALOOP_NAME={{.Node.ID}}
           - DATALOOP_TAGS=docker,swarm,swarm-worker
         volumes:
@@ -18,9 +18,9 @@ services:
                   - node.role != manager
             
     agent-manager:
-        image: dataloop/dataloop-docker:latest
+        image: outlyer/agent:latest
         environment:
-          - DATALOOP_AGENT_KEY=<your dataoop agent key>
+          - DATALOOP_AGENT_KEY=<your dataloop agent key>
           - DATALOOP_NAME={{.Node.ID}}
           - DATALOOP_TAGS=docker,swarm,swarm-manager
         volumes:
