@@ -2,16 +2,16 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: dataloop-docker
+  name: outlyer-agent
   labels:
     tier: monitoring
-    app: dataloop-docker
+    app: outlyer-agent
     version: v1
 spec:
   template:
     metadata:
       labels:
-        name: dataloop-docker
+        name: outlyer-agent
     spec:
       hostPID: true
       hostIPC: true
@@ -23,7 +23,7 @@ spec:
           env:
             - name: DATALOOP_AGENT_KEY
               value: <your dataloop agent key>
-          image: dataloop/dataloop-docker:latest
+          image: outlyer/agent:latest
           imagePullPolicy: Always
           name: dataloop-docker
           volumeMounts:
