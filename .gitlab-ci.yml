@@ -6,6 +6,9 @@ before_script:
 stages:
   - build
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 agent:
   stage: build
   tags:
