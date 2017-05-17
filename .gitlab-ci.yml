@@ -9,14 +9,14 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  BUILD_TAG: 'git describe --tags'
-script:
-  - 'eval $BUILD_TAG'
 
 agent:
   stage: build
+  variables:
+  BUILD_TAG: 'git describe --tags'
   tags:
     - docker-build
   script:
+    - 'eval $BUILD_TAG'
     - cd agent/ 
     - docker build -t outlyer/agent:$BUILD_TAG-1
