@@ -8,6 +8,8 @@ stages:
 
 agent:
   stage: build
+  tags:
+    - docker-build
   script:
     - cd agent/ 
     - docker build -t outlyer/agent:latest .
