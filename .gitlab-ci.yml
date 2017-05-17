@@ -5,7 +5,9 @@ before_script:
 stages:
   - build
 
-job1:
+agent:
   stage: build
   script:
-    echo "building"
+    - cd agent/ 
+    - docker build -t outlyer/agent:latest .
+     
