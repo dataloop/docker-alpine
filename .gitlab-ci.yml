@@ -2,12 +2,16 @@
 before_script:
   # verify docker access
   - docker info
+  
 
 stages:
   - build
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  BUILD_TAG: 'git describe --tags'
+script:
+  - 'eval $BUILD_TAG'
 
 agent:
   stage: build
@@ -15,4 +19,4 @@ agent:
     - docker-build
   script:
     - cd agent/ 
-    - docker build -t outlyer/agent:latest .
+    - docker build -t outlyer/agent:$BUILD_TAG-1
