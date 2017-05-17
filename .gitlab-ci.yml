@@ -13,7 +13,7 @@ variables:
 agent:
   stage: build
   variables:
-  BUILD_TAG: 'git describe --tags'
+    BUILD_TAG: 'git describe --tags'
   tags:
     - docker-build
   script:
