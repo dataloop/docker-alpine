@@ -19,4 +19,4 @@ agent:
   script:
     - 'eval $BUILD_TAG'
     - cd agent/ 
-    - docker build -t outlyer/agent:$BUILD_TAG-1
+    - "docker build -t outlyer/agent:$BUILD_TAG-1"
