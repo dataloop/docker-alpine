@@ -1,8 +1,8 @@
-FROM joelnb/dumb-init-alpine
+FROM smebberson/alpine-base:3.1.0
 MAINTAINER Tom Ashley <tom@dataloop.io>
 
 # Install dataloop basic requirements
-RUN apk add --no-cache --update bash curl python python-dev py-pip gcc musl-dev linux-headers
+RUN apk add --no-cache --update bash curl python python-dev py-pip gcc musl-dev linux-headers tini
 
 # Install plugin_requirements dependencies
 RUN apk add py-mysqldb py-psycopg2 libffi-dev openssl-dev
@@ -30,6 +30,6 @@ RUN apk del python-dev gcc linux-headers binutils binutils-libs libstdc++ gmp is
 # expose the fingerprint
 EXPOSE 8000
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+ENTRYPOINT ["/sbin/tini", "--"]
 
 CMD ["/etc/services.d/dataloop-agent/run"]
