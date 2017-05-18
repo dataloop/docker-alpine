@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv sh
+#!/bin/sh
 
 if [ ! ${DATALOOP_DEBUG} ] ; then
   DATALOOP_DEBUG="no"
