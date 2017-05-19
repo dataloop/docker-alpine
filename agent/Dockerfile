@@ -1,4 +1,4 @@
-FROM smebberson/alpine-base:3.1.0
+FROM alpine:3.4
 MAINTAINER Tom Ashley <tom@dataloop.io>
 
 # Install dataloop basic requirements
