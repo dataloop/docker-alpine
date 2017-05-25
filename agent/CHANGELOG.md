@@ -7,16 +7,16 @@ The patch version is for the number of containers built at this release level
 
 ## 1.3.71-1 - 2017/05/25
 
-* docker-worker: fix - handle kubernetes image format 
-* docker-worker: new - put the services discovered in the agent tag
-* docker-worker: fix - handle empty labels in swarm
-* agent: fix - don't crash when docker top fail, carry on with empty proc list
-* agent: fix - filter the outlyer container when the container was started with --net=host
-* agent: fix - obtaining container ip address when docker container network doesnt exists 
-* plugin-helper: fix - nginx plugin against containers
-* plugin-helper: fix - postgress plugin against containers
-* app: new - in the installer, discover docker pack for containers
-* docker-alpine: big fix - updating our daemonset in kubernetes don't crash the whole cluster
+* Fix: handle kubernetes image format 
+* New: tag agent with discovered services
+* Fix: handle empty labels in Docker Swarm
+* Fix: don't crash when docker top fails, instead continue with empty process list
+* Fix: filter the outlyer container when the container was started with --net=host
+* Fix: get container ip address when gwbridge network is not present
+* Fix: allow nginx plugin to run against containers
+* Fix: better support for running postgres plugin against containers
+* New: in the installer, discover docker pack for containers
+* Fix: updating our daemonset in kubernetes don't crash the whole cluster
 
 ## 1.3.52-2 - 2017/04/27
 
