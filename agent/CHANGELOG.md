@@ -5,6 +5,18 @@ All noteable changes to this project will be documented in this file
 Version releases track the dataloop-agent semver  
 The patch version is for the number of containers built at this release level
 
+## 1.3.71-1 - 2017/05/25
+
+* docker-worker: fix - handle kubernetes image format 
+* docker-worker: new - put the services discovered in the agent tag
+* docker-worker: fix - handle empty labels in swarm
+* agent: fix - don't crash when docker top fail, carry on with empty proc list
+* agent: fix - filter the outlyer container when the container was started with --net=host
+* plugin-helper: fix - nginx plugin against containers
+* plugin-helper: fix - postgress plugin against containers
+* app: new - in the installer, discover docker pack for containers
+* docker-alpine: big fix - updating our daemonset in kubernetes don't crash the whole cluster
+
 ## 1.3.52-2 - 2017/04/27
 
 * only log stacktrace if debug flag is on
