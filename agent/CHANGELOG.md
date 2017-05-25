@@ -12,6 +12,7 @@ The patch version is for the number of containers built at this release level
 * docker-worker: fix - handle empty labels in swarm
 * agent: fix - don't crash when docker top fail, carry on with empty proc list
 * agent: fix - filter the outlyer container when the container was started with --net=host
+* agent: fix - obtaining container ip address when docker container network doesnt exists 
 * plugin-helper: fix - nginx plugin against containers
 * plugin-helper: fix - postgress plugin against containers
 * app: new - in the installer, discover docker pack for containers
