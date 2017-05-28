@@ -17,4 +17,5 @@ agent:
     - docker-build
   script:
     - cd agent/ 
-    - "docker build -t outlyer/agent:$BUILD_TAG-1"
+    - export
+    - docker build -t outlyer/agent:${BUILD_TAG}-1
