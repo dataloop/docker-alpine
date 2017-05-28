@@ -2,6 +2,7 @@
 before_script:
   # verify docker access
   - docker info
+  - export BUILD_TAG=$(git describe --tags)
   
 
 stages:
@@ -12,11 +13,8 @@ variables:
 
 agent:
   stage: build
-  variables:
-    BUILD_TAG: git describe --tags
   tags:
     - docker-build
   script:
-    - 'export $(BUILD_TAG)'
     - cd agent/ 
     - "docker build -t outlyer/agent:$BUILD_TAG-1"
