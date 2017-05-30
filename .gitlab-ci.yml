@@ -21,7 +21,6 @@ branch_agent:
   tags:
     - docker-build
   script:
-    - export
     - docker login -u ${docker_gitlab_login} -p ${docker_gitlab_pass} docker.dataloop.io
     - docker build -t docker.dataloop.io/outlyerapp/docker-alpine/agent:${CI_COMMIT_REF_SLUG} ./agent/
     - docker push docker.dataloop.io/outlyerapp/docker-alpine/agent:${CI_COMMIT_REF_SLUG}
@@ -34,7 +33,6 @@ master_agent:
   tags:
     - docker-build
   script:
-    - export
     - docker login -u ${docker_hub_login} -p ${docker_hub_pass} hub.docker.com
     - docker build -t outlyer/agent:${CI_COMMIT_TAG} ./agent/
     - docker push outlyer/agent:${CI_COMMIT_TAG}
