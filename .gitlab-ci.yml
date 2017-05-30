@@ -13,7 +13,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 branch_agent:
-  stage: build
+  stage: build_branch
   only:
     - branches
   except:
