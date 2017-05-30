@@ -2,20 +2,35 @@
 before_script:
   # verify docker access
   - docker info
-  - export BUILD_TAG=$(git describe --tags)
+  # - export BUILD_TAG=$(git describe --tags)
   
 
 stages:
-  - build
+  - build_branch
+  - build_release
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-agent:
+branch_agent:
   stage: build
+  only:
+    - branches
+  except:
+    - master
   tags:
     - docker-build
   script:
-    - cd agent/ 
     - export
-    - docker build -t outlyer/agent:${BUILD_TAG}-1 .
+    - docker build -t outlyer/agent:${CI_COMMIT_REF_SLUG} ./agent/
+
+
+master_agent:
+  stage: build_release
+  only:
+    - tags
+  tags:
+    - docker-build
+  script:
+    - export
+    - docker build -t outlyer/agent:${CI_COMMIT_TAG} ./agent/
