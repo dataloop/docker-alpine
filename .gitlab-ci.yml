@@ -23,8 +23,8 @@ branch_agent:
   script:
     - export
     - docker login -u ${docker_gitlab_login} -p ${docker_gitlab_pass} docker.dataloop.io
-    - docker build -t outlyer/agent:${CI_COMMIT_REF_SLUG} ./agent/
-    - docker push outlyer/agent:${CI_COMMIT_REF_SLUG}
+    - docker build -t docker.dataloop.io/agent:${CI_COMMIT_REF_SLUG} ./agent/
+    - docker push docker.dataloop.io/agent:${CI_COMMIT_REF_SLUG}
 
 
 master_agent:
