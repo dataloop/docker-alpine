@@ -23,6 +23,7 @@ branch_agent:
   script:
     - docker login -u ${docker_gitlab_login} -p ${docker_gitlab_pass} docker.dataloop.io
     - docker build -t docker.dataloop.io/outlyerapp/docker-alpine/agent:${CI_COMMIT_REF_SLUG} ./agent/
+    - docker info
     - docker push docker.dataloop.io/outlyerapp/docker-alpine/agent:${CI_COMMIT_REF_SLUG}
 
 
