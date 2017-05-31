@@ -24,6 +24,11 @@ RUN chmod +x /etc/services.d/dataloop-agent/run
 RUN /usr/bin/python -m compileall /opt/dataloop/agent
 RUN find /opt/dataloop/agent/dataloop_agent -path /opt/dataloop/agent/dataloop_agent/__init__.py -prune -o -name '*py' -print -exec rm -fv {} \;
 
+# Pop in the JMXquery jar file
+RUN mkdir -p /opt/dataloop/embedded/lib/ \
+    && curl -o /opt/dataloop/embedded/lib/jmxquery-v0.1.5.jar  https://download.dataloop.io/jmxquery/v0.1.5/jmxquery.jar \
+    && ln -s /opt/dataloop/embedded/lib/jmxquery-v0.1.5.jar /opt/dataloop/embedded/lib/jmxquery.jar
+
 # cleanup
 RUN apk del python-dev gcc linux-headers binutils binutils-libs libstdc++ gmp isl
 
