@@ -5,6 +5,10 @@ All noteable changes to this project will be documented in this file
 Version releases track the dataloop-agent semver  
 The patch version is for the number of containers built at this release level
 
+## 1.3.75-1 - 2017/05/31
+
+* New: Add Outlyer JMXQuery.jar v0.1.5
+
 ## 1.3.74-1 - 2017/05/30
 
 * Fix: container exclusion for k8s and rancher 
