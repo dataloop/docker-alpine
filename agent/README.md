@@ -114,20 +114,13 @@ This docker image will accept various other environment variables to allow you t
 
 ## Exposed Ports
 
-Port 8000 is exposed as an HTTP endpoint. It will respond to GET with the fingerprint of the Dataloop agent.
+None
 
-```
-curl -XGET http://<container>:8000
-```
 
 ## Contributing Changes
 
-If you want to modify the container then feel free to submit a pull request. Below is the spec for what each script does.
-
-A set of independent foreground processes that log to standard out that can be run under a [s6-svc](http://skarnet.org/software/s6/)
+If you want to modify the container then feel free to submit a pull request.
 
 This container is also provided as a base container running a Dataloop agent. You can extend it with embedded plugins, or with Prometheus exporters, for example.
 
-Based upon [Alpine Linux](https://www.alpinelinux.org) and using [Scott Mebberson](https://github.com/smebberson) base image, [s6](http://skarnet.org/software/s6/) is used for process managment
-
-Please see [here](https://github.com/smebberson/docker-alpine) for more information about Scott Mebberson's base images and design.
+Based upon [Alpine Linux](https://www.alpinelinux.org) and using [Tini](https://github.com/krallin/tini) for process managment.
