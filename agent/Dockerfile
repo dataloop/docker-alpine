@@ -32,9 +32,6 @@ RUN mkdir -p /opt/dataloop/embedded/lib/ \
 # cleanup
 RUN apk del python-dev gcc linux-headers binutils binutils-libs libstdc++ gmp isl
 
-# expose the fingerprint
-EXPOSE 8000
-
 ENTRYPOINT ["/sbin/tini", "--"]
 
 CMD ["/etc/services.d/dataloop-agent/run"]
